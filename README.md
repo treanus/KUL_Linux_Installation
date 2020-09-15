@@ -66,11 +66,12 @@ Open a terminal.
 Copy the following commands into terminal. (Note that - in order to copy the exact command - you could already open our website on the Linux Mint machine; open firefox, login to our page).
 
 <code> wget https://raw.githubusercontent.com/treanus/KUL_Linux_Installation/master/KNT_Linux_Install.sh </code>
+
 <code> chmod +x KNT_Linux_Install.sh </code>
 
 Now run the script
 
-./KNT_Linux_Install.sh
+<code> ./KNT_Linux_Install.sh </code>
 
 In a first step this will install Anaconda3.
 Follow the installation instruction, and accept the license and initialization.
