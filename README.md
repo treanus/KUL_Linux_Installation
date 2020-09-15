@@ -1,4 +1,5 @@
 Setting up your Linux machine
+
 Here's how to install a linux machine with all software for neuroimaging.
 
 We start by an example where you or your promoter get you a laptop or pc. 
