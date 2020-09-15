@@ -37,27 +37,27 @@ Restart.
 At new login or later you may want to use "System Snapshots" and install additional language packs.
 
 
-Installing NeuroImaging software
+## Installing NeuroImaging software
 
 Now, we install all major neuro-imaging software tools.
 
 It will install:
-Anaconda3 (version 2020-07, python for science)
-htop (latest version, process monitor)
-numlockx (latest version, allows to have NumLock on at startup)
-Video Studio Code (latest version, your editor for programming)
-nvidia cuda (latest version, GPU cuda drivers)
-mrtrix3 (latest version)
-FSL (latest version)
-Docker (latest version, docker containers for fmriprep, etc...)
-Freesurfer (version 7.1.1)
-ANTs (latest version)
-dcm2niix (latest version, converts dicom to niftii)
-dcm2bids (latest Jooh version, converts to BIDS)
-SPM12 (latest version, compiles the binaries)
-cat12 (latest version)
-conn toolbox (version 19c)
-KUL_NeuroImaging_tools (latest version)
+- Anaconda3 (version 2020-07, python for science)
+- htop (latest version, process monitor)
+- numlockx (latest version, allows to have NumLock on at startup)
+- Video Studio Code (latest version, your editor for programming)
+- nvidia cuda (latest version, GPU cuda drivers)
+- mrtrix3 (latest version)
+- FSL (latest version)
+- Docker (latest version, docker containers for fmriprep, etc...)
+- Freesurfer (version 7.1.1)
+- ANTs (latest version)
+- dcm2niix (latest version, converts dicom to niftii)
+- dcm2bids (latest Jooh version, converts to BIDS)
+- SPM12 (latest version, compiles the binaries)
+- cat12 (latest version)
+- conn toolbox (version 19c)
+- KUL_NeuroImaging_tools (latest version)
 
 We use a "script" specifically designed for UZ/KULeuven.
 We download this script from github and execute it.
