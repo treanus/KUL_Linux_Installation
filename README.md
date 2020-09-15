@@ -65,8 +65,8 @@ We download this script from github and execute it.
 Open a terminal.
 Copy the following commands into terminal. (Note that - in order to copy the exact command - you could already open our website on the Linux Mint machine; open firefox, login to our page).
 
-wget https://raw.githubusercontent.com/treanus/KUL_Linux_Installation/master/KNT_Linux_Install.sh
-chmod +x KNT_Linux_Install.sh
+<code> wget https://raw.githubusercontent.com/treanus/KUL_Linux_Installation/master/KNT_Linux_Install.sh </code>
+<code> chmod +x KNT_Linux_Install.sh </code>
 
 Now run the script
 
