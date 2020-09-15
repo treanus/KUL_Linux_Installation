@@ -1,4 +1,4 @@
-#Here's how to install a linux machine with all software for neuroimaging.
+# Here's how to install a linux machine with all software for neuroimaging.
 
 We start by an example where you or your promoter get you a laptop or pc. 
 If the laptop or PC are bought new, take one with FreeDos instead of buying (the license of) Windows 7/8/10, this will safe you a couple of hundred euro's on the Windows license.
