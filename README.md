@@ -1,6 +1,4 @@
-Setting up your Linux machine
-
-Here's how to install a linux machine with all software for neuroimaging.
+#Here's how to install a linux machine with all software for neuroimaging.
 
 We start by an example where you or your promoter get you a laptop or pc. 
 If the laptop or PC are bought new, take one with FreeDos instead of buying (the license of) Windows 7/8/10, this will safe you a couple of hundred euro's on the Windows license.
@@ -102,7 +100,7 @@ sudo umount /media/mathworks
 sudo mount -t iso9660 -o loop /media/sarah/UNTITLED/MathWorks\ MATLAB\ R2018a\ Linux/R2018a_glnxa64_dvd2.iso /media/mathworks/
 
 Modify your .bashrc with
-# Setup Matlab
+\# Setup Matlab
 alias matlab='xrandr --dpi 144; /usr/local/MATLAB/R2018a/bin/matlab &'
 
 If the matlab fonts are small on a highres monitor: see https://nl.mathworks.com/matlabcentral/answers/406956-does-matlab-support-high-dpi-screens-on-linux#answer_325831. Possibly you need to add xrandr --dpi 144 to your .bashrc (as done in the example above)
