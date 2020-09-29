@@ -134,6 +134,7 @@ then
     echo "# adding freesurfer" >> $HOME/.bashrc
     echo "export FREESURFER_HOME=/usr/local/freesurfer" >> $HOME/.bashrc
     echo "export SUBJECTS_DIR=\$FREESURFER_HOME/subjects" >> $HOME/.bashrc
+    echo "export FS_LICENSE=\$HOME/KUL_apps/freesurfer/license.txt" >> $HOME/.bashrc
     echo "source \$FREESURFER_HOME/SetUpFreeSurfer.sh" >> $HOME/.bashrc
     sudo apt-get -y install tcsh
     sudo mkdir -p /KUL/apps/freesurfer
@@ -141,6 +142,7 @@ then
     rm freesurfer-linux-centos7_x86_64-7.1.1.tar.gz
 else
     echo 'Already installed Freesurfer'
+    echo '  however do not forget to install the license.txt into /$HOME/KUL_apps/freesurfer'
 fi
 
 # Installation of Ants
@@ -275,6 +277,6 @@ fi
 
 echo ""
 echo "All done. Please reboot."
-echo "Install the Freesurfer license.txt into /KUL_apps/freesurfer"
-echo "Finally don't forget to install matlab"
+echo "Install the Freesurfer license.txt into /$HOME/KUL_apps/freesurfer/"
+echo "Finally don't forget to install matlab, if not yet done so"
 
