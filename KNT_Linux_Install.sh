@@ -277,6 +277,5 @@ fi
 
 echo ""
 echo "All done. Please reboot."
-echo "Install the Freesurfer license.txt into /$HOME/KUL_apps/freesurfer/"
 echo "Finally don't forget to install matlab, if not yet done so"
 
