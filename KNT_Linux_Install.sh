@@ -294,7 +294,31 @@ else
     echo 'Already installed KUL_VBG'
 fi
 
+# Installation of VBG
+if ! [ -d "$HOME/KUL_apps/KUL_WBTCK_Seg" ] 
+then
+    install_KUL_apps "KUL_FWT"
+    git clone https://github.com/Rad-dude/KUL_WBTCK_Seg.git
+    echo "" >> $HOME/.bashrc
+    echo "# adding KUL_VBG" >> $HOME/.bashrc
+    echo "export PATH="$HOME/KUL_apps/KUL_WBTCK_Seg:\$PATH"" >> $HOME/.bashrc
+    source $HOME/.bashrc
+else
+    echo 'Already installed KUL_FWT'
+fi
 
+# Installation of Scilpy
+if ! command -v scil_filter_tractogram.py &> /dev/null
+then
+    install_KUL_apps "Scilpy"
+    sudo apt-get -y install libblas-dev liblapack-dev
+    git clone https://github.com/scilus/scilpy.git
+    cd scilpy
+    pip install -e .
+else
+    echo 'Already installed Scilpy'
+fi
+   
 # Installation of Aliza
 if ! command -v aliza &> /dev/null
 then
