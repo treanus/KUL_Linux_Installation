@@ -9,7 +9,7 @@ function install_KUL_apps {
     cd
     mkdir -p KUL_apps
     cd KUL_apps
-    clear 
+    #clear 
     read -r -p "Proceed with the installation of $1? [y/n] " prompt
     if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
     then
@@ -85,6 +85,7 @@ if ! [ -d "/usr/local/fsl" ]
 then
     install_KUL_apps "FSL"
     wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+    sudo apt-get -y install python2.7
     sudo python2.7 fslinstaller.py
     rm fslinstaller.py
     cd
@@ -115,33 +116,12 @@ then
     # switching back to normal install, mainly because rootless does not have gpu support
     sudo apt-get -y update
     sudo apt-get -y remove docker docker-engine docker.io
-    sudo apt -y install docker.io
+    sudo apt-get -y install docker.io
     sudo systemctl start docker
     sudo systemctl enable docker
     sudo groupadd docker
     sudo usermod -aG docker $USER
     
-    # We now use the root-less install - see https://docs.docker.com/engine/security/rootless/
-    #sudo apt-get install -y uidmap
-    #curl -fsSL https://get.docker.com/rootless | sh
-    #echo "" >> $HOME/.bashrc
-    #echo "# adding Docker" >> $HOME/.bashrc
-    #echo "export PATH=\$HOME/bin:\$PATH" >> $HOME/.bashrc
-    #echo "export DOCKER_HOST=unix:///run/user/1000/docker.sock" >> $HOME/.bashrc
-    #source $HOME/.bashrc
-    #systemctl --user enable docker
-    #sudo loginctl enable-linger $(whoami)
-
-    # Below is the old install
-    #sudo apt-get -y install apt-transport-https ca-certificates \
-    #curl gnupg-agent software-properties-common
-    #curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    #sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-    #sudo apt-get -y update
-    #sudo apt-get -y install docker-ce docker-ce-cli containerd.io
-    #sudo groupadd docker
-    #sudo usermod -aG docker $USER
-    #newgrp docker 
 else
     echo 'Already installed Docker'
 fi
@@ -212,7 +192,9 @@ fi
 if ! command -v dcm2bids &> /dev/null
 then
     install_KUL_apps "dcm2bids"
-    pip install dcm2bids
+    git clone https://github.com/UNFmontreal/Dcm2Bids.git
+    cd Dcm2Bids/
+    pip install -e .
 else
     echo 'Already installed dcm2bids'
 fi
@@ -221,7 +203,7 @@ fi
 if ! command -v storescu &> /dev/null
 then
     install_KUL_apps "DCMTK"
-    sudo apt -y install dcmtk
+    sudo apt-get -y install dcmtk
 else
     echo 'Already installed DCMTK'
 fi
@@ -270,13 +252,13 @@ else
 fi
 
 # Installation of CONN
-if ! [ -d "$HOME/KUL_apps/conn19c" ] 
+if ! [ -d "$HOME/KUL_apps/conn20b" ] 
 then
-    install_KUL_apps "conn-toolbox version 19c"
-    wget https://www.nitrc.org/frs/download.php/11714/conn19c.zip
-    unzip conn19c.zip
-    mv conn conn19c
-    rm conn19c.zip
+    install_KUL_apps "conn-toolbox version 20b"
+    wget https://www.nitrc.org/frs/download.php/11714/conn20b.zip
+    unzip conn20b.zip
+    mv conn conn20b
+    rm conn20b.zip
     cd
 else
     echo 'Already installed conn-toolbox version 19-c'
