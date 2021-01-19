@@ -133,6 +133,7 @@ then
     install_KUL_apps "Freesurfer v 7.1.1"
     wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos7_x86_64-7.1.1.tar.gz
     sudo tar -C /usr/local -zxvpf freesurfer-linux-centos7_x86_64-7.1.1.tar.gz
+    sudo chown -R $(id -u):$(id -g) /usr/local/freesurfer
     echo "" >> $HOME/.bashrc
     echo "# adding freesurfer" >> $HOME/.bashrc
     echo "export FREESURFER_HOME=/usr/local/freesurfer" >> $HOME/.bashrc
