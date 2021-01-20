@@ -370,6 +370,20 @@ then
     # sudo apt-get -y install cuda
     # rm cuda-repo-ubuntu2004-11-0-local_11.0.3-450.51.06-1_amd64.deb 
 
+    # CudNN
+    cd KUL_apps
+    wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.0.5/10.1_20201106/cudnn-10.1-linux-x64-v8.0.5.39.tgz
+    tar -xvzf cudnn-10.1-linux-x64-v8.0.5.39.tgz
+    sudo cp cuda/include/cudnn*.h /usr/lib/cuda/include
+    sudo cp cuda/lib64/libcudnn* /usr/lib/cuda/lib64
+    sudo chmod a+r /usr/lib/cuda/include/cudnn*.h /usr/lib/cuda/lib64/libcudnn*
+    cd
+    echo "# adding CudNN" >> $HOME/.bashrc
+    echo "export LD_LIBRARY_PATH="/usr/lib/cuda/lib64:\$LD_LIBRARY_PATH"" >> $HOME/.bashrc
+ 
+    # Tensorflow
+    pip install --upgrade TensorFlow
+    
     # also install nvidia cuda support for docker
     curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
     curl -s -L https://nvidia.github.io/nvidia-docker/ubuntu20.04/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
