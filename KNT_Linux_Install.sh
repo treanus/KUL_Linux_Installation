@@ -209,6 +209,16 @@ else
     echo 'Already installed DCMTK'
 fi
 
+
+# Installation of GDCM (other dicom tools)
+if ! command -v gdcmtar &> /dev/null
+then
+    install_KUL_apps "GDCM"
+    sudo apt-get -y install libgdcm-tools
+else
+    echo 'Already installed GDCM'
+fi
+
 # Installation of SPM12
 if ! [ -d "$HOME/KUL_apps/spm12" ] 
 then
@@ -420,16 +430,16 @@ else
 fi
 
 # Installation of Pulse Secure
-if ! [ -d "/usr/local/pulse" ] 
-then
-    install_KUL_apps "Pulse Secure VPN client (only useful in UZLeuven environment)"
-    wget https://support.plymouth.edu/kb_images/Junos_Pulse/vpn_installers/ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
-    sudo dpkg -i ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
-    sudo add-apt-repository 'deb http://archive.ubuntu.com/ubuntu bionic main universe'
-    sudo apt update
-    sudo apt install -t bionic libwebkitgtk-1.0-0
-    rm ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
-fi
+#if ! [ -d "/usr/local/pulse" ] 
+#then
+#    install_KUL_apps "Pulse Secure VPN client (only useful in UZLeuven environment)"
+#    wget https://support.plymouth.edu/kb_images/Junos_Pulse/vpn_installers/ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
+#    sudo dpkg -i ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
+#    sudo add-apt-repository 'deb http://archive.ubuntu.com/ubuntu bionic main universe'
+#    sudo apt update
+#    sudo apt install -t bionic libwebkitgtk-1.0-0
+#    rm ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
+#fi
 
 
 echo ""
