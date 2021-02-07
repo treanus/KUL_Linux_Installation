@@ -46,8 +46,9 @@ clear
 echo 'The system will now ask you your password to update and upgrade all linux system software'
 sudo apt update
 sudo apt upgrade
+sudo apt -y install git
 clear
-sleep 3
+sleep 1
 
 # Installation of Anaconda
 if ! command -v conda &> /dev/null
@@ -272,7 +273,7 @@ then
     rm conn20b.zip
     cd
 else
-    echo 'Already installed conn-toolbox version 19-c'
+    echo 'Already installed conn-toolbox version 20b'
 fi
 
 # Installation of KNT
@@ -305,14 +306,14 @@ else
     echo 'Already installed KUL_VBG'
 fi
 
-# Installation of VBG
-if ! [ -d "$HOME/KUL_apps/KUL_WBTCK_Seg" ] 
+# Installation of FWT
+if ! [ -d "$HOME/KUL_apps/KUL_FWT" ] 
 then
     install_KUL_apps "KUL_FWT"
-    git clone https://github.com/Rad-dude/KUL_WBTCK_Seg.git
+    git clone https://github.com/Rad-dude/KUL_FWT.git
     echo "" >> $HOME/.bashrc
     echo "# adding KUL_VBG" >> $HOME/.bashrc
-    echo "export PATH="$HOME/KUL_apps/KUL_WBTCK_Seg:\$PATH"" >> $HOME/.bashrc
+    echo "export PATH="$HOME/KUL_apps/KUL_FWT:\$PATH"" >> $HOME/.bashrc
     source $HOME/.bashrc
 else
     echo 'Already installed KUL_FWT'
@@ -330,16 +331,6 @@ else
     echo 'Already installed Scilpy'
 fi
    
-# Installation of Aliza
-if ! command -v aliza &> /dev/null
-then
-    install_KUL_apps "Aliza"
-    wget dropbox.com/s/vjdq8k2qxq5x4mo/aliza_1.98.32.2.deb
-    sudo dpkg -i aliza_1.98.32.2.deb
-    rm aliza_1.98.32.2.deb
-else
-    echo 'Already installed Aliza'
-fi
 
 # Install numlockx
 if ! command -v numlockx &> /dev/null
