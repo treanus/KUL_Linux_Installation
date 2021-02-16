@@ -283,6 +283,12 @@ then
     git clone https://github.com/treanus/KUL_NeuroImaging_Tools.git
     cd KUL_NeuroImaging_Tools
     git checkout development
+    cd ..
+    sudo apt-get install libopenblas0
+    cp KUL_NeuroImaging_Tools/share/eddy_cuda11.2_linux.tar.gz .
+    tar -xzvf eddy_cuda11.2_linux.tar.gz
+    rm eddy_cuda11.2_linux.tar.gz
+    sudo ln -s $HOME/KUL_apps/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
     cd
     echo "" >> $HOME/.bashrc
     echo "# adding KUL_NeuroImaging_Tools" >> $HOME/.bashrc
@@ -359,25 +365,31 @@ fi
 # we suppose it is not a problem to install the nvidia toolkit on a system without an nvidea graphics card
 if ! command -v nvcc &> /dev/null
 then
-    # to only install basic toolkit:
+    # we install basic toolkit:
     sudo apt-get -y install nvidia-cuda-toolkit
-    # to install full toolkit for eddy_cuda compilation:
-    # wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-    # sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-    # wget https://developer.download.nvidia.com/compute/cuda/11.0.3/local_installers/cuda-repo-ubuntu2004-11-0-local_11.0.3-450.51.06-1_amd64.deb
-    # sudo dpkg -i cuda-repo-ubuntu2004-11-0-local_11.0.3-450.51.06-1_amd64.deb
-    # sudo apt-key add /var/cuda-repo-ubuntu2004-11-0-local/7fa2af80.pub
-    # sudo apt-get update
-    # sudo apt-get -y install cuda
-    # rm cuda-repo-ubuntu2004-11-0-local_11.0.3-450.51.06-1_amd64.deb 
 
-    # CudNN
+    # install full toolkit for eddy_cuda compilation:
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+    sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+    wget https://developer.download.nvidia.com/compute/cuda/11.2.1/local_installers/cuda-repo-ubuntu2004-11-2-local_11.2.1-460.32.03-1_amd64.deb
+    sudo dpkg -i cuda-repo-ubuntu2004-11-2-local_11.2.1-460.32.03-1_amd64.deb
+    sudo apt-key add /var/cuda-repo-ubuntu2004-11-2-local/7fa2af80.pub
+    sudo apt-get update
+    sudo apt-get -y install cuda
+    rm cuda-repo-ubuntu2004-11-2-local_11.2.1-460.32.03-1_amd64.deb
+
+    # CudNN 
+    # Doesn't work since you need to log-in to developer account of Nvidia
     cd KUL_apps
-    wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.0.5/10.1_20201106/cudnn-10.1-linux-x64-v8.0.5.39.tgz
-    tar -xvzf cudnn-10.1-linux-x64-v8.0.5.39.tgz
-    sudo cp cuda/include/cudnn*.h /usr/lib/cuda/include
-    sudo cp cuda/lib64/libcudnn* /usr/lib/cuda/lib64
-    sudo chmod a+r /usr/lib/cuda/include/cudnn*.h /usr/lib/cuda/lib64/libcudnn*
+    #wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.0.5/10.1_20201106/cudnn-10.1-linux-x64-v8.0.5.39.tgz
+    #tar -xvzf cudnn-10.1-linux-x64-v8.0.5.39.tgz
+    #sudo cp cuda/include/cudnn*.h /usr/lib/cuda/include
+    #sudo cp cuda/lib64/libcudnn* /usr/lib/cuda/lib64
+    #sudo chmod a+r /usr/lib/cuda/include/cudnn*.h /usr/lib/cuda/lib64/libcudnn*
+
+    wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.1.0.77/11.2_20210127/Ubuntu20_04-x64/libcudnn8_8.1.0.77-1+cuda11.2_amd64.deb
+    sudo dpkg -i libcudnn8_8.1.0.77-1+cuda11.2_amd64.deb
+
     cd
     echo "# adding CudNN" >> $HOME/.bashrc
     echo "export LD_LIBRARY_PATH="/usr/lib/cuda/lib64:\$LD_LIBRARY_PATH"" >> $HOME/.bashrc
