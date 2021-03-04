@@ -419,6 +419,21 @@ else
     echo 'Already installed HD-BET'
 fi
 
+# Installation of FastSurfer
+if ! [ -d "$HOME/KUL_apps/FastSurfer/" ] 
+then
+    install_KUL_apps "FastSurfer"
+    git clone https://github.com/Deep-MI/FastSurfer.git
+    echo "" >> $HOME/.bashrc
+    echo "# adding FastSurfer" >> $HOME/.bashrc
+    echo "export FASTSURFER_HOME="$HOME/KUL_apps/FastSurfer"" >> $HOME/.bashrc
+    source $HOME/.bashrc
+    # install Pytorch
+    conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
+else
+    echo 'Already installed MevislabSDK3.4'
+fi
+
 # Installation of Mevislab 3.4
 if ! [ -d "$HOME/KUL_apps/MevislabSDK3.4/" ] 
 then
