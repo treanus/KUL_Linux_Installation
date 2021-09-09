@@ -459,6 +459,15 @@ fi
 #    rm ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
 #fi
 
+# Installation of Robex
+if ! [ -d "$HOME/KUL_apps/ROBEX/" ] 
+then
+    echo "Installing ROBEX"
+    wget -qO- "https://www.nitrc.org/frs/download.php/5994/ROBEXv12.linux64.tar.gz//?i_agree=1&download_now=1" | \
+        tar zx -C $HOME/KUL_apps/
+else
+    echo 'Already installed ROBEX'
+fi
 
 echo ""
 echo "All done. Please reboot."
