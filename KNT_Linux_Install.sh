@@ -186,10 +186,11 @@ then
     ./build
     cat <<EOT >> ${KUL_apps_config}
 # adding MRTRIX3
-export PATH="/usr/local/KUL_apps/mrtrix3/bin:$PATH"
+export PATH="${install_location}:\$PATH"
 
 EOT
-
+    ${install_location}/KUL_apps/mrtrix/install_mime_types.sh
+    
 else
     echo 'Already installed MRtrix3'
 fi
