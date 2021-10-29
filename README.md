@@ -154,7 +154,9 @@ Notes for WSL2 using Win11
 
 5/ INSIDE WIN11: install 
 - visual studio code
-- docker desktop
+- docker desktop & setup the ubuntu as wsl integration
+
+6/ KNT_Linux_Installation
 
 
 
