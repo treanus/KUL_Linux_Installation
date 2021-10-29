@@ -143,9 +143,18 @@ For the example HP laptop Zbook 17 G6, the "startup ACPI error" at boot time is 
 
 Notes for WSL2 using Win11
 
+
 1/ Install win11, perform all updates
+
 2/ Install nvidia-cuda: follow https://docs.microsoft.com/en-us/windows/ai/directml/gpu-cuda-in-wsl
+
 3/ Open powershell as administrator and exe: wls --install & reboot
+
 4/ after reboot you will be asked to setup the user/passwd
-5/ go from above
+
+5/ INSIDE WIN11: install 
+- visual studio code
+- docker desktop
+
+
 
