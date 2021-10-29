@@ -83,11 +83,11 @@ kul_group=$(id -g)
 #echo $kul_group
 sudo mkdir -p ${install_location}
 sudo chgrp -R ${kul_group} ${install_location}
-sudo chmod 770 -R ${install_location}
+sudo chmod -R 770 ${install_location}
 
 # initiate the config file to be sourced by .bashrc
 if [ ! -f ${KUL_apps_config} ]; then
-    echo "export KUL_apps_DIR=${installation_location}" > ${KUL_apps_config}
+    echo "export KUL_apps_DIR=${install_location}" > ${KUL_apps_config}
     echo "# Welcome to KUL_Apps" >> ${KUL_apps_config}
     echo "echo \"  installation DIR is  ${install_location}\" " >> ${KUL_apps_config}
     echo "echo \"  the config file is   ${KUL_apps_config}\" " >> ${KUL_apps_config}
@@ -141,6 +141,20 @@ EOT
     exit
 else
     echo 'Already installed Anaconda3'
+fi
+
+# install cuda toolkit
+install_cuda=1
+if [ $install_cuda -eq 1 ]; then
+    if ! command -v nvcc &> /dev/null
+    then
+        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+        sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+        sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+        sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+        sudo apt-get update
+        sudo apt-get -y install cuda
+    fi
 fi
 
 
