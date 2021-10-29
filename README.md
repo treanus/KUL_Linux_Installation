@@ -156,7 +156,9 @@ Notes for WSL2 using Win11
 - visual studio code
 - docker desktop & setup the ubuntu as wsl integration
 
-6/ KNT_Linux_Installation
+6/ open Ubuntu in wsl2 and perform sudo apt upadte and sudo apt upgrade
+
+7/ KNT_Linux_Installation
 
 
 
