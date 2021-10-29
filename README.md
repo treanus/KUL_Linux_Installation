@@ -148,7 +148,7 @@ Notes for WSL2 using Win11
 
 2/ Install nvidia-cuda: follow https://docs.microsoft.com/en-us/windows/ai/directml/gpu-cuda-in-wsl
 
-3/ Open powershell as administrator and exe: wls --install & reboot
+3/ Open powershell as administrator and exe: wsl --install & reboot
 
 4/ after reboot you will be asked to setup the user/passwd
 
