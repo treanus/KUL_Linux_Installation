@@ -94,16 +94,18 @@ fi
 # ---- MAIN ----
 
 # Now make the install directory
-echo "Making the install directory, readable and executable for all users"
-echo "  you might have to give your password (if needed)"
-sleep 3
-# Determine group id
-kul_group=$(id -g)
-#echo $kul_group
-sudo mkdir -p ${install_location}
-sudo chgrp -R ${kul_group} ${install_location}
-sudo chmod -R 770 ${install_location}
-
+if [ ! -f ${install_location}/.KUL_apps_make_installdir ]; then
+    echo "Making the install directory, readable and executable for all users"
+    echo "  you might have to give your password (if needed)"
+    sleep 3
+    # Determine group id
+    kul_group=$(id -g)
+    #echo $kul_group
+    sudo mkdir -p ${install_location}
+    sudo chgrp -R ${kul_group} ${install_location}
+    sudo chmod -R 770 ${install_location}
+    touch ${install_location}/.KUL_apps_make_installdir
+fi
 
 # Install requirements - TODO: check what is needed!
 if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
