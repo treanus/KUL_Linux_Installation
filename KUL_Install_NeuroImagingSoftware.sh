@@ -16,15 +16,15 @@ install_cuda=1
 #   2 for WSL2
 #   3 for Ubuntu
 if [[ $(uname | grep Darwin) ]];then
-    os=1
+    local_os=1
     os_name="macOS"
     bashfile=$HOME/.bash_profile
 elif [[ $(grep microsoft /proc/version) ]]; then
-    os=2
+    local_os=2
     os_name="Windows-WSL2"
     bashfile=$HOME/.bashrc
 else
-    os=3
+    local_os=3
     os_name="Linux"
     bashfile=$HOME/.bashrc
 fi
@@ -69,7 +69,7 @@ fi
 
 
 # Check if users have installed dependancies for WSL2
-if [ $os -eq 2 ] && [ ! -f $HOME/.KUL_apps_install_wsl2_yes ]; then
+if [ $local_os -eq 2 ] && [ ! -f $HOME/.KUL_apps_install_wsl2_yes ]; then
     echo -e "\n"
     echo "You are running WSL"
     echo "  this script only works well on WSL2 in win11 (or latest preview win10)"
@@ -104,7 +104,7 @@ sudo chmod -R 770 ${install_location}
 
 # Install requirements - TODO: check what is needed!
 if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
-    if [ $os -gt 1 ]; then
+    if [ $local_os -gt 1 ]; then
         echo -e "\n"
         echo "We first install a number of needed packages"
         echo 'The system will now ask for your password (if needed) to update and upgrade all linux system software'
@@ -117,10 +117,10 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             python-is-python3 libeigen3-dev zlib1g-dev libqt5opengl5-dev libqt5svg5-dev libgl1-mesa-dev libfftw3-dev libtiff5-dev libpng-dev \
             tcsh \
             cmake pkg-config
-        if [ $os -eq 2 ];then
+        if [ $local_os -eq 2 ];then
             sudo apt -y install nautilus
         fi
-    elif [ $os -eq 1 ]; then
+    elif [ $local_os -eq 1 ]; then
         # Install command line developer tools
         if xcode-select --install 2>&1 | grep installed; then
             echo "Already installed command line developer tools"
@@ -154,7 +154,7 @@ fi
 if ! command -v conda &> /dev/null
 then
     install_KUL_apps "Anaconda3"
-    if [ $os -eq 1 ]; then
+    if [ $local_os -eq 1 ]; then
         anaconda_version=Anaconda3-2021.05-MacOSX-x86_64.pkg
         curl -o ${anaconda_version} https://repo.anaconda.com/archive/${anaconda_version}
         sudo installer -pkg ${anaconda_version} -target ${install_location}
@@ -201,7 +201,7 @@ EOT
     
     exit
 else
-    echo 'Already installed Anaconda3'
+    echo "Already installed Anaconda3"
 fi
 # Installation of Anaconda --- END
 
@@ -213,23 +213,26 @@ then
 
     echo "# KUL_apps - Setting up some useful stuff" >> ${KUL_apps_config}
     echo "alias ll='ls -alhF'" >> ${KUL_apps_config}
-    if [ $os -eq 2 ];then 
+    if [ $local_os -eq 2 ];then 
         echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${bashpoint}
         conda install -c anaconda wget
+        conda install -c anaconda pkgconfig
+        conda install -c anaconda openblas
+        conda install -c conda-forge lapack
     fi
-    if [ $os -eq 2 ];then 
+    if [ $local_os -eq 2 ];then 
         echo "alias code='code &'" >> ${KUL_apps_config}
     fi
     touch ${install_location}/.KUL_apps_useful_installed
 else
-    echo 'Already set up useful aliases'
+    echo "Already set up useful aliases"
 fi
 
 
 # install cuda toolkit
-if [ $os -eq 2 ]; then
+if [ $local_os -eq 2 ]; then
     echo "Already installed cuda in win11"
-elif [ $os -eq 3 ]; then
+elif [ $local_os -eq 3 ]; then
     if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
@@ -241,13 +244,13 @@ elif [ $os -eq 3 ]; then
             sudo apt-get -y install cuda
         fi
     fi
-elif [ $os -eq 1 ]; then
-    echo "Not installing cuda on macOS"
+elif [ $local_os -eq 1 ]; then
+    echo "Not installing cuda on macOS (no nvidia cards available)"
 fi
 
 
 # Installation of Visual Studio Code
-if [ ! command -v code &> /dev/null ] && [ $os -gt 1 ]; then
+if [ ! command -v code &> /dev/null ] && [ $local_os -gt 1 ]; then
     wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
     sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
     sudo sh -c 'echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
@@ -255,10 +258,10 @@ if [ ! command -v code &> /dev/null ] && [ $os -gt 1 ]; then
     sudo apt-get -y update
     sudo apt-get -y install code
     rm packages.microsoft.gpg
-elif [ $os -eq 1 ]; then
+elif [ $local_os -eq 1 ]; then
     echo "Install Visual Studio Code manually please"
 else
-    echo 'Already installed Visual Studio Code'
+    echo "Already installed Visual Studio Code"
 fi
 
 
@@ -268,26 +271,26 @@ then
     install_KUL_apps "HD-BET"
     git clone https://github.com/MIC-DKFZ/HD-BET
     cd HD-BET
-    if [ $os -eq 1 ]; then
+    if [ $local_os -eq 1 ]; then
         sudo pip install -e .
     else
         pip install -e .
     fi
     cd
     echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git status | head -2 | tail -1)\"" >> $KUL_app_versions
-    if [ $os -eq 1 ]; then
+    if [ $local_os -eq 1 ]; then
         echo "" >> ${KUL_apps_config}
         echo "# Setting up HD-BET" >> ${KUL_apps_config}
         echo "alias hd-bet='hd-bet -device cpu -mode fast -tta 0 ' " >> ${KUL_apps_config}
     fi
 else
-    echo 'Already installed HD-BET'
+    echo "Already installed HD-BET"
 fi
 
 
 # Installation of MRtrix3
 if ! command -v mrconvert &> /dev/null; then
-    if [ $os -eq 1 ]; then
+    if [ $local_os -eq 1 ]; then
         install_KUL_apps "MRtrix3"
         conda install -c mrtrix3 mrtrix3
     else
@@ -309,13 +312,13 @@ EOT
     echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_app_versions
 
 else
-    echo 'Already installed MRtrix3'
+    echo "Already installed MRtrix3"
 fi
 
 
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
-    if [ $os -eq 1 ]; then
+    if [ $local_os -eq 1 ]; then
         echo "Please install docker desktop manually on macOS"
     else
         install_KUL_apps "Docker"
@@ -328,7 +331,7 @@ if ! command -v docker &> /dev/null; then
         sudo usermod -aG docker $USER
     fi
 else
-    echo 'Already installed Docker'
+    echo "Already installed Docker"
 fi
 
 
@@ -341,7 +344,7 @@ source ${bashfile}
 if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
     echo "Now installing some useful docker containers"
     sleep 3
-    if [ $os -eq 1 ]; then
+    if [ $local_os -eq 1 ]; then
         echo -e "\n\n\n"
         echo "Here we give the installation instructions for docker containers on macOS..."
         echo "See to it that Docker Desktop is setup and running"
@@ -364,7 +367,7 @@ fi
 # Installation of FSL
 if ! command -v fslmaths &> /dev/null; then
     install_KUL_apps "FSL"
-    if [ $os -eq 2 ]; then
+    if [ $local_os -eq 2 ]; then
         sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
     fi
     wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
@@ -386,20 +389,19 @@ EOT
     echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_app_versions
 
 else
-    echo 'Already installed FSL'
+    echo "Already installed FSL"
 fi
 
 
 # Installation of Freesurfer
 if ! command -v freeview &> /dev/null; then
-    install_KUL_apps "Freesurfer"
     freesurfer_version="7.2.0"
-    if [ $os -eq 1 ]; then
+    install_KUL_apps "Freesurfer v ${freesurfer_version}"
+    if [ $local_os -eq 1 ]; then
         freesurfer_file="freesurfer-darwin-macOS-7.2.0"
     else
         freesurfer_file="freesurfer-linux-ubuntu18_amd64-7.2.0"
     fi
-    install_KUL_apps "Freesurfer v ${freesurfer_version}"
     wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/${freesurfer_version}/${freesurfer_file}.tar.gz
     tar -zxvpf ${freesurfer_file}.tar.gz
     cat <<EOT >> ${KUL_apps_config}
@@ -417,19 +419,17 @@ EOT
     echo "Install the license.txt into ${install_location}/reesurfer_license"
     rm ${freesurfer_file}.tar.gz
 else
-    echo 'Already installed Freesurfer ${freesurfer_version}'
-    echo '  however do not forget to install the license.txt into ${install_location}/freesurfer_license'
+    echo "Already installed Freesurfer ${freesurfer_version}"
+    echo "  however do not forget to install the license.txt into ${install_location}/freesurfer_license"
 fi
 
-exit
 
 # Installation of Ants
-if ! [ -d "${install_location}/ANTs_installed" ]
-then
+if ! [ -d "${install_location}/ANTs_installed" ]; then
     install_KUL_apps "Ants"
     wget https://raw.githubusercontent.com/cookpa/antsInstallExample/master/installANTs.sh
     chmod +x installANTs.sh
-    if [ $os -eq 1 ]; then
+    if [ $local_os -eq 1 ]; then
         conda install -c anaconda cmake
     else
         sudo apt-get -y install cmake pkg-config
@@ -447,15 +447,13 @@ export PATH=\${ANTSPATH}:\$PATH
 EOT
     echo "echo -e \"\t ants\t\t-\t\$(antsRegistration --version | head -1 | awk '{ print \$3 }') \"" >> $KUL_app_versions
 else
-    echo 'Already installed ANTs'
+    echo "Already installed ANTs"
 fi
 
 
 # Installation of dcm2niix
-if ! command -v dcm2niix &> /dev/null
-then
+if ! command -v dcm2niix &> /dev/null; then
     install_KUL_apps "dcm2niix"
-    #sudo apt-get -y install cmake pkg-config
     git clone https://github.com/rordenlab/dcm2niix.git
     cd dcm2niix
     mkdir build && cd build
@@ -463,45 +461,49 @@ then
     make
     cat <<EOT >> ${KUL_apps_config}
 # adding dcm2nixx
-export PATH="${install_location}/dcm2niix/build/bin:\$PATH"
+export PATH=${install_location}/dcm2niix/build/bin:\$PATH
 
 EOT
     echo "echo -e \"\t dcm2nixx\t-\t\$(dcm2niix --version | head -1 | awk '{ print \$5 }') \"" >> $KUL_app_versions 
 else
-    echo 'Already installed dcm2niix'
+    echo "Already installed dcm2niix"
 fi
 
 
 # Installation of dcm2bids
-if ! command -v dcm2bids &> /dev/null
-then
+if ! command -v dcm2bids &> /dev/null; then
     install_KUL_apps "dcm2bids"
     pip install dcm2bids
     echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_app_versions 
 else
-    echo 'Already installed dcm2bids'
+    echo "Already installed dcm2bids"
 fi
 
 
 # Installation of DCMTK
-if ! command -v storescu &> /dev/null
-then
+if ! command -v storescu &> /dev/null; then
     install_KUL_apps "DCMTK"
-    sudo apt-get -y install dcmtk
+    if [ $local_os -eq 1 ]; then
+        conda install -c bioconda dcmtk
+    else
+        sudo apt-get -y install dcmtk
+    fi
 else
-    echo 'Already installed DCMTK'
+    echo "Already installed DCMTK"
 fi
 
 
 # Installation of GDCM (other dicom tools)
-if ! command -v gdcmtar &> /dev/null
-then
+if ! command -v gdcmtar &> /dev/null; then
     install_KUL_apps "GDCM"
-    sudo apt-get -y install libgdcm-tools
+    if [ $local_os -eq 1 ]; then
+        pip install python-gdcm
+    else
+        sudo apt-get -y install libgdcm-tools
+    fi
 else
-    echo 'Already installed GDCM'
+    echo "Already installed GDCM"
 fi
-
 
 
 # Setup of Matlab
@@ -520,7 +522,7 @@ if ! [ -d "${install_location}/spm12" ]; then
     wget https://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip
     unzip spm12.zip
     #Note: Matlab needs to be installed first to compile the mex files
-    read -r -p "Do you want to recompile to SPM binaries (if so, you need yo have matlab installed) [y/n] " prompt
+    read -r -p "Do you want to recompile to SPM binaries (if so, you need yo have matlab installed and set up) [y/n] " prompt
     if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
     then
         echo 'OK we continue'
@@ -534,7 +536,7 @@ if ! [ -d "${install_location}/spm12" ]; then
     rm spm12.zip
     echo "echo -e \"\t spm12\t\t-\tcheck from within matlab please \"" >> $KUL_app_versions
 else
-    echo 'Already installed spm12'
+    echo "Already installed spm12"
 fi
 
 
@@ -546,7 +548,7 @@ if ! [ -d "${install_location}/spm12/toolbox/cat12" ]; then
     rm cat12_latest.zip
     echo "echo -e \"\t cat12\t\t-\tcheck from within matlab please \"" >> $KUL_app_versions
 else
-    echo 'Already installed cat12'
+    echo "Already installed cat12"
 fi
 
 
@@ -563,7 +565,7 @@ if ! [ -d "${install_location}/leaddbs" ]; then
     rm leaddbs_data.zip
     echo "echo -e \"\t Lead-DBS\t\t-\tcheck from within matlab please \"" >> $KUL_app_versions
 else
-    echo 'Already installed Lead-DBS'
+    echo "Already installed Lead-DBS"
 fi
 
 
@@ -572,53 +574,53 @@ conn_version="con20b"
 if ! [ -d "${install_location}/${conn_version}" ]; then
     install_KUL_apps "conn-toolbox version ${conn_version}"
     wget https://www.nitrc.org/frs/download.php/11714/${conn_version}.zip
-    unzip${conn_version}.zip
+    unzip ${conn_version}.zip
     mv conn ${conn_version}
     rm ${conn_version}.zip
     echo "echo -e \"\t conn\t\t-\t${conn_version} \"" >> $KUL_app_versions
 else
-    echo 'Already installed conn-toolbox version 20b'
+    echo "Already installed conn-toolbox version ${conn_version}"
 fi
 
-exit
 
 # Installation of KNT
-if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ] 
-then
+if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ]; then
     install_KUL_apps "KUL_NeuroImaging_Tools"
     git clone https://github.com/treanus/KUL_NeuroImaging_Tools.git
-    cd KUL_NeuroImaging_Tools
-    git checkout development
-    cd ..
-    sudo apt-get install libopenblas0
-    cp KUL_NeuroImaging_Tools/share/eddy_cuda11.2_linux.tar.gz .
-    tar -xzvf eddy_cuda11.2_linux.tar.gz
-    rm eddy_cuda11.2_linux.tar.gz
-    sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
+    #cd KUL_NeuroImaging_Tools
+    #git checkout development
+    #cd ..
+    if [ $local_os -gt 1 ]; then
+        sudo apt-get install libopenblas0
+        cp KUL_NeuroImaging_Tools/share/eddy_cuda11.2_linux.tar.gz .
+        tar -xzvf eddy_cuda11.2_linux.tar.gz
+        rm eddy_cuda11.2_linux.tar.gz
+        sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
+    fi
     cat <<EOT >> ${KUL_apps_config}
 # adding KUL_NeuroImaging_Tools
-export PATH="${install_location}/KUL_NeuroImaging_Tools:\$PATH"
+export PATH=${install_location}/KUL_NeuroImaging_Tools:\$PATH
 export PYTHONPATH=${install_location}/mrtrix3/lib
 
 EOT
-
+    echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git status | head -2 | tail -1)\"" >> $KUL_app_versions
 else
-    echo 'Already installed KUL_NeuroImaging_Tools'
+    echo "Already installed KUL_NeuroImaging_Tools"
 fi
 
 
 # Installation of VBG
-if ! [ -d "${install_location}/KUL_VBG" ] 
-then
+if ! [ -d "${install_location}/KUL_VBG" ]; then
     install_KUL_apps "KUL_VBG"
     git clone https://github.com/treanus/KUL_VBG.git
     cat <<EOT >> ${KUL_apps_config}
 # adding KUL_VBG
-export PATH="${install_location}/KUL_VBG:\$PATH"
+export PATH=${install_location}/KUL_VBG:\$PATH
 
 EOT
+    echo "echo -e \"\t KUL_VBG\t-\t\$(cd $KUL_apps_DIR/KUL_VBG; git status | head -2 | tail -1)\"" >> $KUL_app_versions
 else
-    echo 'Already installed KUL_VBG'
+    echo "Already installed KUL_VBG"
 fi
 
 
@@ -635,102 +637,30 @@ then
 export PATH="${install_location}/KUL_FWT:\$PATH"
 
 EOT
-
+    echo "echo -e \"\t KUL_FWT\t-\t\$(cd $KUL_apps_DIR/KUL_FWT; git status | head -2 | tail -1)\"" >> $KUL_app_versions
 else
-    echo 'Already installed KUL_FWT'
+    echo "Already installed KUL_FWT"
 fi
 
 
 # Installation of Scilpy
-if ! command -v scil_filter_tractogram.py &> /dev/null
-then
+if ! command -v scil_filter_tractogram.py &> /dev/null; then
     install_KUL_apps "Scilpy"
-    sudo apt-get -y install libblas-dev liblapack-dev
+    if [ $local_os -gt 1 ]; then
+        sudo apt-get -y install libblas-dev liblapack-dev
+    fi
     git clone https://github.com/scilus/scilpy.git
     cd scilpy
     pip install -e .
+    echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+
 else
-    echo 'Already installed Scilpy'
-fi
-   
-
-# Install numlockx
-if ! command -v numlockx &> /dev/null
-then
-    sudo apt install numlockx
-else
-    echo 'Already installed numlockx; activate it in login-window'
-fi
-
-# Installation of htop
-if ! command -v htop &> /dev/null
-then
-    sudo apt-get install htop
-else
-    echo 'Already installed htop'
-fi
-
-
-install_cuda=0
-if [ $install_cuda -eq 1 ]; then
-    # Installation of Nvidia cuda toolkit
-    # Read https://medium.com/@stephengregory_69986/installing-cuda-10-1-on-ubuntu-20-04-e562a5e724a0
-    # or 
-    # https://linuxconfig.org/how-to-install-cuda-on-ubuntu-20-04-focal-fossa-linux
-    # and
-    # https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=2004&target_type=deblocal
-    # https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=FSL;9e6a81c9.2002
-    #
-    # we suppose it is not a problem to install the nvidia toolkit on a system without an nvidea graphics card
-    if ! command -v nvcc &> /dev/null
-    then
-        # we install basic toolkit:
-        sudo apt-get -y install nvidia-cuda-toolkit
-
-        # install full toolkit for eddy_cuda compilation:
-        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-        sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-        wget https://developer.download.nvidia.com/compute/cuda/11.2.1/local_installers/cuda-repo-ubuntu2004-11-2-local_11.2.1-460.32.03-1_amd64.deb
-        sudo dpkg -i cuda-repo-ubuntu2004-11-2-local_11.2.1-460.32.03-1_amd64.deb
-        sudo apt-key add /var/cuda-repo-ubuntu2004-11-2-local/7fa2af80.pub
-        sudo apt-get update
-        sudo apt-get -y install cuda
-        rm cuda-repo-ubuntu2004-11-2-local_11.2.1-460.32.03-1_amd64.deb
-
-        # CudNN 
-        # Doesn't work since you need to log-in to developer account of Nvidia
-        cd KUL_apps
-        #wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.0.5/10.1_20201106/cudnn-10.1-linux-x64-v8.0.5.39.tgz
-        #tar -xvzf cudnn-10.1-linux-x64-v8.0.5.39.tgz
-        #sudo cp cuda/include/cudnn*.h /usr/lib/cuda/include
-        #sudo cp cuda/lib64/libcudnn* /usr/lib/cuda/lib64
-        #sudo chmod a+r /usr/lib/cuda/include/cudnn*.h /usr/lib/cuda/lib64/libcudnn*
-
-        wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.1.0.77/11.2_20210127/Ubuntu20_04-x64/libcudnn8_8.1.0.77-1+cuda11.2_amd64.deb
-        sudo dpkg -i libcudnn8_8.1.0.77-1+cuda11.2_amd64.deb
-
-        cd
-        echo "# adding CudNN" >> $HOME/${bashfile}
-        echo "export LD_LIBRARY_PATH="/usr/lib/cuda/lib64:\$LD_LIBRARY_PATH"" >> $HOME/${bashfile}
-    
-        # Tensorflow
-        pip install --upgrade TensorFlow
-        
-        # also install nvidia cuda support for docker
-        curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-        curl -s -L https://nvidia.github.io/nvidia-docker/ubuntu20.04/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-        sudo apt-get update
-        sudo apt-get -y install nvidia-container-runtime
-
-    else
-        echo 'Already installed Nvidia cuda toolkit'
-    fi
+    echo "Already installed Scilpy"
 fi
 
 
 # Installation of FastSurfer
-if ! [ -d "${install_location}/FastSurfer/" ] 
-then
+if ! [ -d "${install_location}/FastSurfer/" ] && [ $local_os -gt 1 ]; then
     install_KUL_apps "FastSurfer"
     git clone https://github.com/Deep-MI/FastSurfer.git
     cat <<EOT >> ${KUL_apps_config}
@@ -740,40 +670,54 @@ export FASTSURFER_HOME="${install_location}/FastSurfer"
 EOT
     source ${install_location}/KUL_apps_config
     # install Pytorch
-    conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
+    conda install pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch
+    echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+
+elif [ $local_os -eq 1 ]; then
+    echo "On macOS we will use the docker version of Fastsurfer"
 else
-    echo 'Already installed FastSurfer'
+    echo "Already installed FastSurfer"
+fi
+
+# Installation of Karawun
+if ! [ -f "${install_location}/.KUL_apps_installed_karawun" ]; then
+    install_KUL_apps "Karawun"
+    conda config --append channels conda-forge --append channels anaconda --append channels SimpleITK
+    conda install git
+    conda create --name KarawunEnv --file https://github.com/DevelopmentalImagingMCRI/karawun/raw/master/requirements.txt
+    conda activate KarawunEnv
+    pip install git+https://github.com/DevelopmentalImagingMCRI/karawun.git@master
+    conda deactivate
+    touch ${install_location}/.KUL_apps_installed_karawun
+else
+    echo "Already installed Karawun"
 fi
 
 
 # Installation of Mevislab 3.4
-if ! [ -d "${install_location}/MevislabSDK3.4/" ] 
-then
+if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
     install_KUL_apps "Mevislab 3.4"
-    wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.4/Linux/GCC7-64/MeVisLabSDK3.4_gcc7-64.bin
-    chmod u+x MeVisLabSDK3.4_gcc7-64.bin
-    #mkdir MeVisLabSDK3.4 
-    ./MeVisLabSDK3.4_gcc7-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
-    rm MeVisLabSDK3.4_gcc7-64.bin
+    if [ $local_os -eq 1 ]; then
+        ml_file="https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.2/Mac/X86-64/MeVisLabSDK3.4.2_x86-64.dmg"
+        wget $ml_file
+        hdiutil mount $ml_file
+        sudo cp -R /Volumes/MeVisLabSDK/MeVisLab.app /Applications
+        hdiutil unmount /Volumes/MeVisLabSDK
+        rm $ml_file
+    else
+        wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.3/Linux/GCC7-64/MeVisLabSDK3.4.3_gcc7-64.bin
+        chmod u+x MeVisLabSDK3.4_gcc7-64.bin
+        #mkdir MeVisLabSDK3.4 
+        ./MeVisLabSDK3.4_gcc7-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
+        rm MeVisLabSDK3.4_gcc7-64.bin
+    fi
 else
-    echo 'Already installed MevislabSDK3.4'
+    echo "Already installed MevislabSDK3.4"
 fi
 
-# Installation of Pulse Secure
-#if ! [ -d "/usr/local/pulse" ] 
-#then
-#    install_KUL_apps "Pulse Secure VPN client (only useful in UZLeuven environment)"
-#    wget https://support.plymouth.edu/kb_images/Junos_Pulse/vpn_installers/ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
-#    sudo dpkg -i ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
-#    sudo add-apt-repository 'deb http://archive.ubuntu.com/ubuntu bionic main universe'
-#    sudo apt update
-#    sudo apt install -t bionic libwebkitgtk-1.0-0
-#    rm ps-pulse-linux-9.1r8.0-b165-ubuntu-debian-64-bit-installer.deb
-#fi
 
 # Installation of Robex
-if ! [ -d "${install_location}/ROBEX/" ] 
-then
+if ! [ -d "${install_location}/ROBEX/" ]; then
     install_KUL_apps "ROBEX"
     wget -qO- "https://www.nitrc.org/frs/download.php/5994/ROBEXv12.linux64.tar.gz//?i_agree=1&download_now=1" | \
         tar zx -C ${install_location}
@@ -784,12 +728,11 @@ export PATH="${install_location}/ROBEX:\$PATH"
 EOT
 
 else
-    echo 'Already installed ROBEX'
+    echo "Already installed ROBEX"
 fi
 
 # Installation of nvtop
-if ! command -v nvtop &> /dev/null
-then
+if [ ! command -v nvtop &> /dev/null ] && [ $local_os -gt 1 ]; then
     sudo apt install cmake libncurses5-dev libncursesw5-dev
     git clone https://github.com/Syllo/nvtop.git
     mkdir -p nvtop/build && cd nvtop/build
@@ -798,6 +741,10 @@ then
     sudo make install
     cd ../..
     rm -fr nvtop
+elif [ $local_os -eq 1 ]; then
+    echo "Not installing nvtop on macOS"
+else
+    echo "Already installed nvtop"
 fi
 
 
@@ -809,8 +756,8 @@ if [ ! -f ${KULcheck} ]; then
     echo "echo \"Welcome to KUL_Apps\" " >> ${KUL_apps_config}
     echo "echo \"  installation DIR is  ${install_location}\" " >> ${KUL_apps_config}
     echo "echo \"  the config file is   ${KUL_apps_config}\" " >> ${KUL_apps_config}
-    echo "echo \"   installed software/version is: \""
-    echo "source $KUL_app_versions"
+    echo "echo \"  installed software/version is: \"" >> ${KUL_apps_config}
+    echo "source $KUL_app_versions" >> ${KUL_apps_config}
     echo "echo \" \" " >> ${KUL_apps_config}
     touch $KULcheck
 fi
@@ -818,4 +765,3 @@ fi
 echo -e "\n\n\n"
 echo "All done. Please reboot."
 echo "Install the Freesurfer license.txt into ${install_location}/freesurfer_license/"
-echo "Finally don't forget to install matlab, if not yet done so"
