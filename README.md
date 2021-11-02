@@ -66,7 +66,7 @@ Open a terminal.
 Copy the following commands into terminal. 
 
 <code> 
-wget https://raw.githubusercontent.com/treanus/KUL_Linux_Installation/master/KNT_Linux_Install.sh
+wget https://raw.githubusercontent.com/treanus/KNT_Linux_Install/master/KUL_Install_NeuroImagingSoftware.sh
 
 chmod +x KUL_Install_NeuroImagingSoftware.sh 
 </code>
