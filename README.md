@@ -65,9 +65,11 @@ sudo apt upgrade
 Open a terminal.
 Copy the following commands into terminal. 
 
-<code> wget https://raw.githubusercontent.com/treanus/KUL_Linux_Installation/master/KNT_Linux_Install.sh </code>
+<code> 
+wget https://raw.githubusercontent.com/treanus/KUL_Linux_Installation/master/KNT_Linux_Install.sh
 
-<code> chmod +x KUL_Install_NeuroImagingSoftware.sh </code>
+chmod +x KUL_Install_NeuroImagingSoftware.sh 
+</code>
 
 Now run the script
 
