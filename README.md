@@ -1,4 +1,4 @@
-# Here's how to install a linux machine with all software for neuroimaging.
+# Here's how to install a Neuroimaging Software on Linux, WSL2 and macOS.
 
 This script installs a large number of NeuroImaging related software on Linux (Ubuntu 20.04 preferably), Windows-WSL2 (latest Win11 preferably) or macOS
 
@@ -16,6 +16,8 @@ The script installs the latest stable versions of:
 - ANTs 
 - dcm2niix 
 - dcm2bids 
+- DCMTK
+- GDCM
 - SPM12 
 - cat12 
 - lead-DBS
@@ -23,6 +25,10 @@ The script installs the latest stable versions of:
 - KUL_NeuroImaging_tools 
 - KUL_VBG
 - KUL_FWT
+- Scilpy
+- FastSurfer
+- Mevislab
+- Robex
 
 ## Prerequisites
 ### All
@@ -31,8 +37,9 @@ The script installs the latest stable versions of:
 ### Linux
 Should run out of the box.
 You may want to update your linux system:
-<code> sudo apt update </code>
-<code> sudo apt upgrade </code>
+
+<code> sudo apt update 
+sudo apt upgrade </code>
 
 ### Windows with WSL2
 - Install win11, perform all updates
@@ -47,6 +54,7 @@ You may want to update your linux system:
 ### macOS
 - Install Docker Desktop and set it up
 - Install Visual Studio Code
+- Install XQuartz
 
 
 ## Installation notes
@@ -77,4 +85,4 @@ Depending on the cpu and the internet connection speed this will take a few hour
 
 - The freesurfer license file needs to be installed. Put it in $KUL_apps_DIR/freesurfer_license
 - Start matlab, add spm12 and conn to the path. The path for spm12 and conn is $HOME/KUL_apps/spm and conn.
-
+- On macOS open Docker Desktop; in Resources/FileSharing add the folder with the freesurfer license.

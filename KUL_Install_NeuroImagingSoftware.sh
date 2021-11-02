@@ -1,20 +1,23 @@
 #!/bin/bash
 
 # This script installs many NeuroImaging software for use in 
-# MRI neuroimaging on Linux, WSL2 or OsX...
+# MRI neuroimaging on Linux, WSL2 or macOS...
 # Stefan Sunaert - first version dd 08092020 - v0.1
 #  current version dd 01112021 - v0.6
 
 # ask each time to install a program
 auto=0
+# do you want to install cuda (only for an nvidia GPU)
+install_cuda=1
+
 
 # check the operating system
-#   1 for OsX
+#   1 for macOS
 #   2 for WSL2
 #   3 for Ubuntu
 if [[ $(uname | grep Darwin) ]];then
     os=1
-    os_name="OsX"
+    os_name="macOS"
     bashfile=$HOME/.bash_profile
 elif [[ $(grep microsoft /proc/version) ]]; then
     os=2
@@ -26,6 +29,7 @@ else
     bashfile=$HOME/.bashrc
 fi
 echo "This script will install a lot of neuro-imaging software on ${os_name}"
+
 
 # Define the install location
 install_location=/usr/local/KUL_apps
@@ -39,8 +43,7 @@ function install_KUL_apps {
     source $bashfile
     echo -e "\n"
     read -r -p "Proceed with the installation of $1? [y/n] " prompt
-    if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
-    then
+    if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]; then
         echo 'OK we continue'
     else
         exit
@@ -48,23 +51,20 @@ function install_KUL_apps {
 }
 
 
-
 # Give some information & ask permission to continue (if not yet done so)
 if [ ! -f $HOME/.KUL_apps_install_yes ]; then
-echo "      for details see https://github.com/treanus/KUL_Linux_Installation"
-echo "      it will take several hours to install (and compile, if needed) all software."
-echo "      You may have to exit the shell several times, after which you have to restart the script."
-echo "      The script will check what has already been installed and continue installing software"
-echo "      This script may ask you a several times for your password in order to install software (sudo usage)"
-
-read -r -p "Proceed with the installation? [y/n] " prompt
-if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
-then
-    echo 'OK we continue'
-    touch $HOME/.KUL_apps_install_yes
-else
-    exit
-fi
+    echo "      for details see https://github.com/treanus/KUL_Linux_Installation"
+    echo "      it will take several hours to install (and compile, if needed) all software."
+    echo "      You may have to exit the shell several times, after which you have to restart the script."
+    echo "      The script will check what has already been installed and continue installing software"
+    echo "      This script may ask you a several times for your password in order to install software (sudo usage)"
+    read -r -p "Proceed with the installation? [y/n] " prompt
+    if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]; then
+        echo 'OK we continue'
+        touch $HOME/.KUL_apps_install_yes
+    else
+        exit
+    fi
 fi
 
 
@@ -214,8 +214,11 @@ then
     echo "# KUL_apps - Setting up some useful stuff" >> ${KUL_apps_config}
     echo "alias ll='ls -alhF'" >> ${KUL_apps_config}
     if [ $os -eq 2 ];then 
-        echo "alias code='code &'" >> ${KUL_apps_config}
         echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${bashpoint}
+        conda install -c anaconda wget
+    fi
+    if [ $os -eq 2 ];then 
+        echo "alias code='code &'" >> ${KUL_apps_config}
     fi
     touch ${install_location}/.KUL_apps_useful_installed
 else
@@ -224,7 +227,6 @@ fi
 
 
 # install cuda toolkit
-install_cuda=1
 if [ $os -eq 2 ]; then
     echo "Already installed cuda in win11"
 elif [ $os -eq 3 ]; then
@@ -240,7 +242,7 @@ elif [ $os -eq 3 ]; then
         fi
     fi
 elif [ $os -eq 1 ]; then
-    echo "Not installing cuda on OsX"
+    echo "Not installing cuda on macOS"
 fi
 
 
@@ -287,7 +289,7 @@ fi
 if ! command -v mrconvert &> /dev/null; then
     if [ $os -eq 1 ]; then
         install_KUL_apps "MRtrix3"
-        sudo conda install -c mrtrix3 mrtrix3
+        conda install -c mrtrix3 mrtrix3
     else
         install_KUL_apps "MRtrix3"
         git clone https://github.com/MRtrix3/mrtrix3.git
@@ -314,7 +316,7 @@ fi
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
     if [ $os -eq 1 ]; then
-        echo "Please install docker desktop manually on Osx"
+        echo "Please install docker desktop manually on macOS"
     else
         install_KUL_apps "Docker"
         sudo apt-get -y update
@@ -341,10 +343,10 @@ if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
     sleep 3
     if [ $os -eq 1 ]; then
         echo -e "\n\n\n"
-        echo "Here we give the installation instructions for docker containers on OsX..."
+        echo "Here we give the installation instructions for docker containers on macOS..."
         echo "See to it that Docker Desktop is setup and running"
         read -p "Press any key to continue... " -n1 -s
-        echo "Not installing hd-glio-auto on OsX (no compatible GPU)"
+        echo "Not installing hd-glio-auto on macOS (no compatible GPU)"
         echo "echo -e \"\t hd-glio-auto\t-\tcannot be installed (no compatible GPU) \"" >> $KUL_app_versions
     else
         docker pull jenspetersen/hd-glio-auto
@@ -358,28 +360,22 @@ else
     echo "Already installed required docker containers"
 fi
 
-exit
 
 # Installation of FSL
-if ! command -v fslmaths &> /dev/null;; then
+if ! command -v fslmaths &> /dev/null; then
     install_KUL_apps "FSL"
     if [ $os -eq 2 ]; then
         sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
     fi
-    if [ $os -eq 1 ]; then
-        curl -o fslinstaller.py https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
-    else
-        wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
-        sudo apt-get -y install python2.7
-    fi
+    wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+    sudo apt-get -y install python2.7
     echo -e "\n\n\n"
     echo "Here we give the installation instructions for FSL..."
     echo "it is ok to install to the default /usr/local/fsl directory"
     read -p "Press any key to continue... " -n1 -s
     sudo python2.7 fslinstaller.py
     rm fslinstaller.py
-    if [ $os -gt 1 ]; then
-        cat <<EOT >> ${KUL_apps_config}
+    cat <<EOT >> ${KUL_apps_config}
 # Installing FSL
 FSLDIR=/usr/local/fsl
 . \${FSLDIR}/etc/fslconf/fsl.sh
@@ -387,24 +383,25 @@ PATH=\${FSLDIR}/bin:\${PATH}
 export FSLDIR PATH
 
 EOT
-    fi
-
     echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_app_versions
+
 else
     echo 'Already installed FSL'
 fi
 
-exit
 
 # Installation of Freesurfer
-#if ! command -v freeview &> /dev/null
-if ! [ -d "${install_location}/freesurfer" ]
-then
-    freesurfer_version1="freesurfer-linux-ubuntu18_amd64-7.2.0"
-    freesurfer_version2="7.2.0"
-    install_KUL_apps "Freesurfer v ${freesurfer_version2}"
-    wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/${freesurfer_version2}/${freesurfer_version1}.tar.gz
-    tar -zxvpf ${freesurfer_version1}.tar.gz
+if ! command -v freeview &> /dev/null; then
+    install_KUL_apps "Freesurfer"
+    freesurfer_version="7.2.0"
+    if [ $os -eq 1 ]; then
+        freesurfer_file="freesurfer-darwin-macOS-7.2.0"
+    else
+        freesurfer_file="freesurfer-linux-ubuntu18_amd64-7.2.0"
+    fi
+    install_KUL_apps "Freesurfer v ${freesurfer_version}"
+    wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/${freesurfer_version}/${freesurfer_file}.tar.gz
+    tar -zxvpf ${freesurfer_file}.tar.gz
     cat <<EOT >> ${KUL_apps_config}
 # adding freesurfer
 export FREESURFER_HOME=${install_location}/freesurfer
@@ -418,12 +415,13 @@ EOT
     echo "echo -e \"\t freesurfer\t-\t\$(recon-all -version) \"" >> $KUL_app_versions
     mkdir -p ${install_location}/freesurfer_license
     echo "Install the license.txt into ${install_location}/reesurfer_license"
-    rm ${freesurfer_version1}.tar.gz
+    rm ${freesurfer_file}.tar.gz
 else
-    echo 'Already installed Freesurfer ${freesurfer_version2}'
+    echo 'Already installed Freesurfer ${freesurfer_version}'
     echo '  however do not forget to install the license.txt into ${install_location}/freesurfer_license'
 fi
 
+exit
 
 # Installation of Ants
 if ! [ -d "${install_location}/ANTs_installed" ]
@@ -431,7 +429,11 @@ then
     install_KUL_apps "Ants"
     wget https://raw.githubusercontent.com/cookpa/antsInstallExample/master/installANTs.sh
     chmod +x installANTs.sh
-    sudo apt-get -y install cmake pkg-config
+    if [ $os -eq 1 ]; then
+        conda install -c anaconda cmake
+    else
+        sudo apt-get -y install cmake pkg-config
+    fi
     ./installANTs.sh
     mv install ANTs_installed
     rm installANTs.sh
@@ -513,8 +515,7 @@ fi
 
 
 # Installation of SPM12
-if ! [ -d "${install_location}/spm12" ] 
-then
+if ! [ -d "${install_location}/spm12" ]; then
     install_KUL_apps "spm12"
     wget https://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip
     unzip spm12.zip
@@ -538,8 +539,7 @@ fi
 
 
 # Installation of cat12
-if ! [ -d "${install_location}/spm12/toolbox/cat12" ] 
-then
+if ! [ -d "${install_location}/spm12/toolbox/cat12" ]; then
     install_KUL_apps "cat12"
     wget http://www.neuro.uni-jena.de/cat12/cat12_latest.zip
     unzip cat12_latest.zip -d spm12/toolbox
@@ -551,8 +551,7 @@ fi
 
 
 # Installation of Lead-DBS
-if ! [ -d "${install_location}/leaddbs" ] 
-then
+if ! [ -d "${install_location}/leaddbs" ]; then
     install_KUL_apps "Lead-DBS"
     git clone https://github.com/netstim/leaddbs.git
     wget -O leaddbs_data.zip http://www.lead-dbs.org/release/download.php?id=data_pcloud
@@ -570,9 +569,7 @@ fi
 
 # Installation of CONN
 conn_version="con20b"
-if ! [ -d "${install_location}/${conn_version}" ] 
-then
-    
+if ! [ -d "${install_location}/${conn_version}" ]; then
     install_KUL_apps "conn-toolbox version ${conn_version}"
     wget https://www.nitrc.org/frs/download.php/11714/${conn_version}.zip
     unzip${conn_version}.zip
