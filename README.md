@@ -40,6 +40,7 @@ You may want to update your linux system:
 
 <code> 
 sudo apt update
+
 sudo apt upgrade 
 </code>
 
