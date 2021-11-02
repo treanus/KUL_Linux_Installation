@@ -1,22 +1,42 @@
 #!/bin/bash
 
-# This script installs many NeuroImaging software for use in MRI neuroimaging...
+# This script installs many NeuroImaging software for use in 
+# MRI neuroimaging on Linux, WSL2 or OsX...
 # Stefan Sunaert - first version dd 08092020 - v0.1
-#  current version dd 19102021 - v0.5
+#  current version dd 01112021 - v0.6
 
 # ask each time to install a program
 auto=0
 
+# check the operating system
+#   1 for OsX
+#   2 for WSL2
+#   3 for Ubuntu
+if [[ $(uname | grep Darwin) ]];then
+    os=1
+    os_name="OsX"
+    bashfile=$HOME/.bash_profile
+elif [[ $(grep microsoft /proc/version) ]]; then
+    os=2
+    os_name="Windows-WSL2"
+    bashfile=$HOME/.bashrc
+else
+    os=3
+    os_name="Linux"
+    bashfile=$HOME/.bashrc
+fi
+echo "This script will install a lot of neuro-imaging software on ${os_name}"
 
 # Define the install location
 install_location=/usr/local/KUL_apps
 KUL_apps_config="${install_location}/KUL_apps_config"
 KUL_app_versions="${install_location}/KUL_apps_versions"
 
+
 # First define a function to keep installation of things tidy
 function install_KUL_apps {
     cd ${install_location}
-    source $HOME/.bashrc
+    source $bashfile
     echo -e "\n"
     read -r -p "Proceed with the installation of $1? [y/n] " prompt
     if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
@@ -28,25 +48,14 @@ function install_KUL_apps {
 }
 
 
-# Check if we are on WSL2
-wsl=0
-if [[ $(grep microsoft /proc/version) ]]; then
-    wsl=1
-fi
-
 
 # Give some information & ask permission to continue (if not yet done so)
-if [ $wsl -eq 1 ]; then
-    echo 'This script will install a lot of neuro-imaging software on WSL2'
-else  
-    echo 'This script will install a lot of neuro-imaging software on a Linux system'
-fi
 if [ ! -f $HOME/.KUL_apps_install_yes ]; then
-echo '      for details see https://github.com/treanus/KUL_Linux_Installation'
-echo '      it will take several hours to install (and compile, if needed) all software. '
-echo '      You may have to exit the shell several times, after which you have to restart the script.'
-echo '      The script will check what has already been installed and continue installing software'
-echo '      This script may ask you a several times for your password in order to install software (sudo usage)'
+echo "      for details see https://github.com/treanus/KUL_Linux_Installation"
+echo "      it will take several hours to install (and compile, if needed) all software."
+echo "      You may have to exit the shell several times, after which you have to restart the script."
+echo "      The script will check what has already been installed and continue installing software"
+echo "      This script may ask you a several times for your password in order to install software (sudo usage)"
 
 read -r -p "Proceed with the installation? [y/n] " prompt
 if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
@@ -60,7 +69,7 @@ fi
 
 
 # Check if users have installed dependancies for WSL2
-if [ $wsl -eq 1 ] && [ ! -f $HOME/.KUL_apps_install_wsl2_yes ]; then
+if [ $os -eq 2 ] && [ ! -f $HOME/.KUL_apps_install_wsl2_yes ]; then
     echo -e "\n"
     echo "You are running WSL"
     echo "  this script only works well on WSL2 in win11 (or latest preview win10)"
@@ -95,26 +104,36 @@ sudo chmod -R 770 ${install_location}
 
 # Install requirements - TODO: check what is needed!
 if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
-    echo -e "\n"
-    echo "We first install a number of needed packages"
-    echo 'The system will now ask for your password (if needed) to update and upgrade all linux system software'
-    sleep 4
-    sudo apt update
-    sudo apt upgrade
-    sudo apt -y install git \
-        libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
-        g++ zlib1g-dev \
-        python-is-python3 libeigen3-dev zlib1g-dev libqt5opengl5-dev libqt5svg5-dev libgl1-mesa-dev libfftw3-dev libtiff5-dev libpng-dev \
-        tcsh \
-        cmake pkg-config
-    if [ $wsl -eq 1 ];then
-        sudo apt -y install nautilus
-    fi
-    touch ${install_location}/.KUL_apps_install_required_yes
+    if [ $os -gt 1 ]; then
+        echo -e "\n"
+        echo "We first install a number of needed packages"
+        echo 'The system will now ask for your password (if needed) to update and upgrade all linux system software'
+        sleep 4
+        sudo apt update
+        sudo apt upgrade
+        sudo apt -y install git \
+            libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
+            g++ zlib1g-dev \
+            python-is-python3 libeigen3-dev zlib1g-dev libqt5opengl5-dev libqt5svg5-dev libgl1-mesa-dev libfftw3-dev libtiff5-dev libpng-dev \
+            tcsh \
+            cmake pkg-config
+        if [ $os -eq 2 ];then
+            sudo apt -y install nautilus
+        fi
+    elif [ $os -eq 1 ]; then
+        # Install command line developer tools
+        if xcode-select --install 2>&1 | grep installed; then
+            echo "Already installed command line developer tools"
+        else
+            echo "Installing command line developer tools"
+            xcode-select --install
+        fi
+    fi  
+    touch ${install_location}/.KUL_apps_install_required_yes  
 fi
 
 
-# initiate the config file to be sourced by .bashrc
+# initiate the config file to be sourced by ${bashfile}
 if [ ! -f ${KUL_apps_config} ]; then
     # the KUL_apps_config
     echo "export KUL_apps_DIR=${install_location}" > ${KUL_apps_config}
@@ -122,11 +141,11 @@ if [ ! -f ${KUL_apps_config} ]; then
     cat <<EOT > $KUL_app_versions
 #!/bin/bash
 EOT
-    # update .bashrc
-    echo "" >> .bashrc
-    echo "# Source the KUL_apps and other neuroimaging software" >> .bashrc
-    echo "source ${KUL_apps_config}"  >> .bashrc
-    source .bashrc
+    # update ${bashfile}
+    echo "" >> ${bashfile}
+    echo "# Source the KUL_apps and other neuroimaging software" >> ${bashfile}
+    echo "source ${KUL_apps_config}"  >> ${bashfile}
+    source ${bashfile}
     sleep 4
 fi
 
@@ -135,19 +154,23 @@ fi
 if ! command -v conda &> /dev/null
 then
     install_KUL_apps "Anaconda3"
-    anaconda_version=Anaconda3-2021.05-Linux-x86_64
-    #sudo apt-get -y install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
-    wget https://repo.anaconda.com/archive/${anaconda_version}.sh
-    echo -e "\n\n"
-    echo "Here we give the installation instructions for anaconda..."
-    echo "ACCEPT THE LICENSE"
-    echo "CHANGE THE INSTALL DIRECTORY to /usr/local/KUL_apps/anaconda3"
-    echo "Say no NO initialize Anaconda3"
-    read -p "Press any key to continue... " -n1 -s
-    bash ${anaconda_version}.sh
-    rm ${anaconda_version}.sh
-    echo "" >> ${KUL_apps_config}
-    echo "# load Anaconda3"
+    if [ $os -eq 1 ]; then
+        anaconda_version=Anaconda3-2021.05-MacOSX-x86_64.pkg
+        curl -o ${anaconda_version} https://repo.anaconda.com/archive/${anaconda_version}
+        sudo installer -pkg ${anaconda_version} -target ${install_location}
+    else
+        anaconda_version=Anaconda3-2021.05-Linux-x86_64.sh
+        #sudo apt-get -y install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+        wget https://repo.anaconda.com/archive/${anaconda_version}
+        echo -e "\n\n"
+        echo "Here we give the installation instructions for anaconda..."
+        echo "ACCEPT THE LICENSE"
+        echo "CHANGE THE INSTALL DIRECTORY to /usr/local/KUL_apps/anaconda3"
+        echo "Say no NO initialize Anaconda3"
+        read -p "Press any key to continue... " -n1 -s
+        bash ${anaconda_version}
+        echo "" >> ${KUL_apps_config}
+        echo "# load Anaconda3"
 
 # begin cat command - see below
     cat <<EOT >> ${KUL_apps_config}
@@ -168,13 +191,14 @@ unset __conda_setup
 
 EOT
 # end cat command - see above
-    echo "echo -e \"\t Anaconda3\t-\t$anaconda_version" \" >> $KUL_app_versions
-    echo -e "\n\n\n"
-    if [ $wsl -eq 1 ];then
-        echo 'Now exit WSL2-Ubuntu and run the KNT_Linux_install.sh again from new terminal'
-    else
-        echo 'Now exit this terminal and run the KNT_Linux_install.sh again from a new terminal'
+
     fi
+
+    rm ${anaconda_version}
+    echo "echo -e \"\t Anaconda3\t-\t${anaconda_version}" \" >> $KUL_app_versions
+    echo -e "\n\n\n"
+    echo "Now exit all ${os_name} terminals and run the KNT_Linux_install.sh again from a new terminal"
+    
     exit
 else
     echo 'Already installed Anaconda3'
@@ -187,15 +211,12 @@ if ! [ -f "${install_location}/.KUL_apps_useful_installed" ]
 then
     echo "Setting up useful aliases "
 
-# begin cat command - see below
-    cat <<EOT >> ${KUL_apps_config}
-# KUL_apps - Setting up some useful stuff
-alias ll='ls -alhF'
-alias code='code &'
-
-EOT
-# end cat command - see above
-
+    echo "# KUL_apps - Setting up some useful stuff" >> ${KUL_apps_config}
+    echo "alias ll='ls -alhF'" >> ${KUL_apps_config}
+    if [ $os -eq 2 ];then 
+        echo "alias code='code &'" >> ${KUL_apps_config}
+        echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${bashpoint}
+    fi
     touch ${install_location}/.KUL_apps_useful_installed
 else
     echo 'Already set up useful aliases'
@@ -204,9 +225,9 @@ fi
 
 # install cuda toolkit
 install_cuda=1
-if [ $wsl -eq 1 ]; then
+if [ $os -eq 2 ]; then
     echo "Already installed cuda in win11"
-else
+elif [ $os -eq 3 ]; then
     if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
@@ -218,12 +239,13 @@ else
             sudo apt-get -y install cuda
         fi
     fi
+elif [ $os -eq 1 ]; then
+    echo "Not installing cuda on OsX"
 fi
 
 
 # Installation of Visual Studio Code
-if ! command -v code &> /dev/null
-then
+if [ ! command -v code &> /dev/null ] && [ $os -gt 1 ]; then
     wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
     sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
     sudo sh -c 'echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
@@ -231,6 +253,8 @@ then
     sudo apt-get -y update
     sudo apt-get -y install code
     rm packages.microsoft.gpg
+elif [ $os -eq 1 ]; then
+    echo "Install Visual Studio Code manually please"
 else
     echo 'Already installed Visual Studio Code'
 fi
@@ -242,22 +266,34 @@ then
     install_KUL_apps "HD-BET"
     git clone https://github.com/MIC-DKFZ/HD-BET
     cd HD-BET
-    pip install -e .
+    if [ $os -eq 1 ]; then
+        sudo pip install -e .
+    else
+        pip install -e .
+    fi
     cd
     echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+    if [ $os -eq 1 ]; then
+        echo "" >> ${KUL_apps_config}
+        echo "# Setting up HD-BET" >> ${KUL_apps_config}
+        echo "alias hd-bet='hd-bet -device cpu -mode fast -tta 0 ' " >> ${KUL_apps_config}
+    fi
 else
     echo 'Already installed HD-BET'
 fi
 
 
 # Installation of MRtrix3
-if ! command -v mrconvert &> /dev/null
-then
-    install_KUL_apps "MRtrix3"
-    git clone https://github.com/MRtrix3/mrtrix3.git
-    cd mrtrix3
-    ./configure
-    ./build
+if ! command -v mrconvert &> /dev/null; then
+    if [ $os -eq 1 ]; then
+        install_KUL_apps "MRtrix3"
+        sudo conda install -c mrtrix3 mrtrix3
+    else
+        install_KUL_apps "MRtrix3"
+        git clone https://github.com/MRtrix3/mrtrix3.git
+        cd mrtrix3
+        ./configure
+        ./build
 # begin cat command - see below
     cat <<EOT >> ${KUL_apps_config}
 # adding MRTRIX3
@@ -265,64 +301,85 @@ export PATH="${install_location}/mrtrix3/bin:\$PATH"
 
 EOT
 # end cat command - see above
-    echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_app_versions
     ${install_location}/KUL_apps/mrtrix/install_mime_types.sh
+    fi
     
+    echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_app_versions
+
 else
     echo 'Already installed MRtrix3'
 fi
 
 
 # Installation of Docker
-if ! command -v docker &> /dev/null
-then
-    install_KUL_apps "Docker"
-    sudo apt-get -y update
-    sudo apt-get -y remove docker docker-engine docker.io
-    sudo apt-get -y install docker.io
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo groupadd docker
-    sudo usermod -aG docker $USER
+if ! command -v docker &> /dev/null; then
+    if [ $os -eq 1 ]; then
+        echo "Please install docker desktop manually on Osx"
+    else
+        install_KUL_apps "Docker"
+        sudo apt-get -y update
+        sudo apt-get -y remove docker docker-engine docker.io
+        sudo apt-get -y install docker.io
+        sudo systemctl start docker
+        sudo systemctl enable docker
+        sudo groupadd docker
+        sudo usermod -aG docker $USER
+    fi
 else
     echo 'Already installed Docker'
 fi
 
 
 # lets's make install current
-source $HOME/.bashrc
+source ${bashfile}
+
 
 
 # download a number of Docker containers
 if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
     echo "Now installing some useful docker containers"
-    sleep 4
-    docker pull jenspetersen/hd-glio-auto
+    sleep 3
+    if [ $os -eq 1 ]; then
+        echo -e "\n\n\n"
+        echo "Here we give the installation instructions for docker containers on OsX..."
+        echo "See to it that Docker Desktop is setup and running"
+        read -p "Press any key to continue... " -n1 -s
+        echo "Not installing hd-glio-auto on OsX (no compatible GPU)"
+        echo "echo -e \"\t hd-glio-auto\t-\tcannot be installed (no compatible GPU) \"" >> $KUL_app_versions
+    else
+        docker pull jenspetersen/hd-glio-auto
+        echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_app_versions
+    fi
+    echo "Installing synb0"
     docker pull hansencb/synb0
-    echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_app_versions
     echo "echo -e \"\t synb0\t\t-\tcannot be checked (but latest docker) \"" >> $KUL_app_versions
     touch ${install_location}/.KUL_apps_install_containers_yes
 else
     echo "Already installed required docker containers"
 fi
 
+exit
 
 # Installation of FSL
-if ! [ -d "/usr/local/fsl" ]
-then
+if ! command -v fslmaths &> /dev/null;; then
     install_KUL_apps "FSL"
-    if [ $wsl -eq 1 ]; then
+    if [ $os -eq 2 ]; then
         sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
     fi
-    wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
-    sudo apt-get -y install python2.7
+    if [ $os -eq 1 ]; then
+        curl -o fslinstaller.py https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+    else
+        wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+        sudo apt-get -y install python2.7
+    fi
     echo -e "\n\n\n"
     echo "Here we give the installation instructions for FSL..."
     echo "it is ok to install to the default /usr/local/fsl directory"
     read -p "Press any key to continue... " -n1 -s
     sudo python2.7 fslinstaller.py
     rm fslinstaller.py
-    cat <<EOT >> ${KUL_apps_config}
+    if [ $os -gt 1 ]; then
+        cat <<EOT >> ${KUL_apps_config}
 # Installing FSL
 FSLDIR=/usr/local/fsl
 . \${FSLDIR}/etc/fslconf/fsl.sh
@@ -330,11 +387,14 @@ PATH=\${FSLDIR}/bin:\${PATH}
 export FSLDIR PATH
 
 EOT
+    fi
+
     echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_app_versions
 else
     echo 'Already installed FSL'
 fi
 
+exit
 
 # Installation of Freesurfer
 #if ! command -v freeview &> /dev/null
@@ -445,10 +505,10 @@ fi
 # Setup of Matlab
 #if ! command -v matlab &> /dev/null
 #then
-#    echo "" >> $HOME/.bashrc
-#    echo "# adding matlab" >> $HOME/.bashrc
-#    echo "export PATH=/usr/local/MATLAB/R2018a/bin:\$PATH" >> $HOME/.bashrc
-#    echo "alias matlab='xrandr --dpi 144; matlab &'" >> $HOME/.bashrc
+#    echo "" >> $HOME/${bashfile}
+#    echo "# adding matlab" >> $HOME/${bashfile}
+#    echo "export PATH=/usr/local/MATLAB/R2018a/bin:\$PATH" >> $HOME/${bashfile}
+#    echo "alias matlab='xrandr --dpi 144; matlab &'" >> $HOME/${bashfile}
 #fi
 
 
@@ -653,8 +713,8 @@ if [ $install_cuda -eq 1 ]; then
         sudo dpkg -i libcudnn8_8.1.0.77-1+cuda11.2_amd64.deb
 
         cd
-        echo "# adding CudNN" >> $HOME/.bashrc
-        echo "export LD_LIBRARY_PATH="/usr/lib/cuda/lib64:\$LD_LIBRARY_PATH"" >> $HOME/.bashrc
+        echo "# adding CudNN" >> $HOME/${bashfile}
+        echo "export LD_LIBRARY_PATH="/usr/lib/cuda/lib64:\$LD_LIBRARY_PATH"" >> $HOME/${bashfile}
     
         # Tensorflow
         pip install --upgrade TensorFlow
@@ -744,7 +804,7 @@ then
 fi
 
 
-# complete the config file to be sourced by .bashrc
+# complete the config file to be sourced by ${bashfile}
 KULcheck=${install_location}/.KUL_apps_installed_prompts
 if [ ! -f ${KULcheck} ]; then
     # the KUL_apps_config

@@ -4,10 +4,11 @@
 
 # remove bash_profile
 cd
-mv .bash_profile bash_profile_magweg
+mv $HOME/.bash_profile $HOME/bash_profile_backup
 
 # remove anaconda
-rm $HOME/opt/anaconda3
+rm -rf $HOME/opt/anaconda3
+rm -rf $HOME/anaconda3
 
 # remove brew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
