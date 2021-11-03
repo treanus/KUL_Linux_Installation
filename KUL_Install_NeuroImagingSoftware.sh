@@ -93,11 +93,7 @@ fi
 
 # ---- MAIN ----
 
-<<<<<<< HEAD
-# Now make the install 
-=======
 # Now make the install directory
->>>>>>> 77de0db3bf7ba13c87174362d128d53035dbb89f
 if [ ! -f ${install_location}/.KUL_apps_make_installdir ]; then
     echo "Making the install directory, readable and executable for all users"
     echo "  you might have to give your password (if needed)"
@@ -224,7 +220,6 @@ then
     echo "alias ll='ls -alhF'" >> ${KUL_apps_config}
     if [ $local_os -eq 2 ];then 
         echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${bashpoint}
-<<<<<<< HEAD
         conda install -c anaconda wget
         conda install -c anaconda pkgconfig
         conda install -c anaconda openblas
@@ -232,13 +227,6 @@ then
         conda install -c conda-forge zlib
         conda install -c conda-forge eigen
         conda install -c conda-forge qt
-=======
-        conda install -y  -c anaconda wget
-        conda install -y  -c anaconda pkgconfig
-        conda install -y  -c anaconda openblas
-        conda install -y  -c conda-forge lapack
-        conda install -y  -c conda-forge jq
->>>>>>> 77de0db3bf7ba13c87174362d128d53035dbb89f
     fi
     if [ $local_os -eq 2 ];then 
         echo "alias code='code &'" >> ${KUL_apps_config}
@@ -310,23 +298,15 @@ fi
 
 # Installation of MRtrix3
 if ! command -v mrconvert &> /dev/null; then
-<<<<<<< HEAD
     install_KUL_apps "MRtrix3"
     git clone https://github.com/MRtrix3/mrtrix3.git
     cd mrtrix3
-    ./configure
-    ./build
-=======
     if [ $local_os -eq 1 ]; then
-        install_KUL_apps "MRtrix3"
-        conda install -y  -c mrtrix3 mrtrix3
-    else
-        install_KUL_apps "MRtrix3"
-        git clone https://github.com/MRtrix3/mrtrix3.git
-        cd mrtrix3
+        ./configure -conda
+    else  
         ./configure
-        ./build
->>>>>>> 77de0db3bf7ba13c87174362d128d53035dbb89f
+    fi
+    ./build
 # begin cat command - see below
     cat <<EOT >> ${KUL_apps_config}
 # adding MRTRIX3
