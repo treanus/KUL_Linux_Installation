@@ -6,7 +6,7 @@
 #  current version dd 01112021 - v0.6
 
 # ask each time to install a program
-auto=0
+auto=1
 # do you want to install cuda (only for an nvidia GPU)
 install_cuda=1
 
@@ -42,11 +42,14 @@ function install_KUL_apps {
     cd ${install_location}
     source $bashfile
     echo -e "\n"
-    read -r -p "Proceed with the installation of $1? [y/n] " prompt
-    if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]; then
-        echo 'OK we continue'
-    else
-        exit
+    if [ $auto -eq 0 ]; then
+        read -r -p "Proceed with the installation of $1? [Y/n] " prompt
+        prompt=${prompt:-y}
+        if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]; then
+            echo 'OK we continue'
+        else
+            exit
+        fi
     fi
 }
 
@@ -90,7 +93,11 @@ fi
 
 # ---- MAIN ----
 
+<<<<<<< HEAD
 # Now make the install 
+=======
+# Now make the install directory
+>>>>>>> 77de0db3bf7ba13c87174362d128d53035dbb89f
 if [ ! -f ${install_location}/.KUL_apps_make_installdir ]; then
     echo "Making the install directory, readable and executable for all users"
     echo "  you might have to give your password (if needed)"
@@ -217,6 +224,7 @@ then
     echo "alias ll='ls -alhF'" >> ${KUL_apps_config}
     if [ $local_os -eq 2 ];then 
         echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${bashpoint}
+<<<<<<< HEAD
         conda install -c anaconda wget
         conda install -c anaconda pkgconfig
         conda install -c anaconda openblas
@@ -224,6 +232,13 @@ then
         conda install -c conda-forge zlib
         conda install -c conda-forge eigen
         conda install -c conda-forge qt
+=======
+        conda install -y  -c anaconda wget
+        conda install -y  -c anaconda pkgconfig
+        conda install -y  -c anaconda openblas
+        conda install -y  -c conda-forge lapack
+        conda install -y  -c conda-forge jq
+>>>>>>> 77de0db3bf7ba13c87174362d128d53035dbb89f
     fi
     if [ $local_os -eq 2 ];then 
         echo "alias code='code &'" >> ${KUL_apps_config}
@@ -295,11 +310,23 @@ fi
 
 # Installation of MRtrix3
 if ! command -v mrconvert &> /dev/null; then
+<<<<<<< HEAD
     install_KUL_apps "MRtrix3"
     git clone https://github.com/MRtrix3/mrtrix3.git
     cd mrtrix3
     ./configure
     ./build
+=======
+    if [ $local_os -eq 1 ]; then
+        install_KUL_apps "MRtrix3"
+        conda install -y  -c mrtrix3 mrtrix3
+    else
+        install_KUL_apps "MRtrix3"
+        git clone https://github.com/MRtrix3/mrtrix3.git
+        cd mrtrix3
+        ./configure
+        ./build
+>>>>>>> 77de0db3bf7ba13c87174362d128d53035dbb89f
 # begin cat command - see below
     cat <<EOT >> ${KUL_apps_config}
 # adding MRTRIX3
@@ -430,7 +457,7 @@ if ! [ -d "${install_location}/ANTs_installed" ]; then
     wget https://raw.githubusercontent.com/cookpa/antsInstallExample/master/installANTs.sh
     chmod +x installANTs.sh
     if [ $local_os -eq 1 ]; then
-        conda install -c anaconda cmake
+        conda install -y  -c anaconda cmake
     else
         sudo apt-get -y install cmake pkg-config
     fi
@@ -484,7 +511,7 @@ fi
 if ! command -v storescu &> /dev/null; then
     install_KUL_apps "DCMTK"
     if [ $local_os -eq 1 ]; then
-        conda install -c bioconda dcmtk
+        conda install -y  -c bioconda dcmtk
     else
         sudo apt-get -y install dcmtk
     fi
@@ -670,7 +697,7 @@ export FASTSURFER_HOME="${install_location}/FastSurfer"
 EOT
     source ${install_location}/KUL_apps_config
     # install Pytorch
-    conda install pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch
+    conda install -y  pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch
     echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git status | head -2 | tail -1)\"" >> $KUL_app_versions
 
 elif [ $local_os -eq 1 ]; then
@@ -683,7 +710,7 @@ fi
 if ! [ -f "${install_location}/.KUL_apps_installed_karawun" ]; then
     install_KUL_apps "Karawun"
     conda config --append channels conda-forge --append channels anaconda --append channels SimpleITK
-    conda install git
+    conda install -y  git
     conda create --name KarawunEnv --file https://github.com/DevelopmentalImagingMCRI/karawun/raw/master/requirements.txt
     conda activate KarawunEnv
     pip install git+https://github.com/DevelopmentalImagingMCRI/karawun.git@master
@@ -706,10 +733,10 @@ if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
         rm $ml_file
     else
         wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.3/Linux/GCC7-64/MeVisLabSDK3.4.3_gcc7-64.bin
-        chmod u+x MeVisLabSDK3.4_gcc7-64.bin
+        chmod u+x MeVisLabSDK3.4.3_gcc7-64.bin
         #mkdir MeVisLabSDK3.4 
-        ./MeVisLabSDK3.4_gcc7-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
-        rm MeVisLabSDK3.4_gcc7-64.bin
+        ./MeVisLabSDK3.4.3_gcc7-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
+        rm MeVisLabSDK3.4.3_gcc7-64.bin
     fi
 else
     echo "Already installed MevislabSDK3.4"
@@ -733,6 +760,7 @@ fi
 
 # Installation of nvtop
 if [ ! command -v nvtop &> /dev/null ] && [ $local_os -gt 1 ]; then
+    install_KUL_apps "nvtop"
     sudo apt install cmake libncurses5-dev libncursesw5-dev
     git clone https://github.com/Syllo/nvtop.git
     mkdir -p nvtop/build && cd nvtop/build
