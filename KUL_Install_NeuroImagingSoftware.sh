@@ -11,6 +11,12 @@ auto=0
 install_cuda=1
 
 
+# Define the install location
+install_location=/usr/local/KUL_apps
+KUL_apps_config="${install_location}/KUL_apps_config"
+KUL_app_versions="${install_location}/KUL_apps_versions"
+
+
 # check the operating system
 #   1 for macOS
 #   2 for WSL2
@@ -29,12 +35,6 @@ else
     bashfile=$HOME/.bashrc
 fi
 echo "This script will install a lot of neuro-imaging software on ${os_name}"
-
-
-# Define the install location
-install_location=/usr/local/KUL_apps
-KUL_apps_config="${install_location}/KUL_apps_config"
-KUL_app_versions="${install_location}/KUL_apps_versions"
 
 
 # First define a function to keep installation of things tidy
@@ -90,17 +90,19 @@ fi
 
 # ---- MAIN ----
 
-# Now make the install directory
-echo "Making the install directory, readable and executable for all users"
-echo "  you might have to give your password (if needed)"
-sleep 3
-# Determine group id
-kul_group=$(id -g)
-#echo $kul_group
-sudo mkdir -p ${install_location}
-sudo chgrp -R ${kul_group} ${install_location}
-sudo chmod -R 770 ${install_location}
-
+# Now make the install 
+if [ ! -f ${install_location}/.KUL_apps_make_installdir ]; then
+    echo "Making the install directory, readable and executable for all users"
+    echo "  you might have to give your password (if needed)"
+    sleep 3
+    # Determine group id
+    kul_group=$(id -g)
+    #echo $kul_group
+    sudo mkdir -p ${install_location}
+    sudo chgrp -R ${kul_group} ${install_location}
+    sudo chmod -R 770 ${install_location}
+    touch ${install_location}/.KUL_apps_make_installdir
+fi
 
 # Install requirements - TODO: check what is needed!
 if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
@@ -219,6 +221,9 @@ then
         conda install -c anaconda pkgconfig
         conda install -c anaconda openblas
         conda install -c conda-forge lapack
+        conda install -c conda-forge zlib
+        conda install -c conda-forge eigen
+        conda install -c conda-forge qt
     fi
     if [ $local_os -eq 2 ];then 
         echo "alias code='code &'" >> ${KUL_apps_config}
@@ -290,15 +295,11 @@ fi
 
 # Installation of MRtrix3
 if ! command -v mrconvert &> /dev/null; then
-    if [ $local_os -eq 1 ]; then
-        install_KUL_apps "MRtrix3"
-        conda install -c mrtrix3 mrtrix3
-    else
-        install_KUL_apps "MRtrix3"
-        git clone https://github.com/MRtrix3/mrtrix3.git
-        cd mrtrix3
-        ./configure
-        ./build
+    install_KUL_apps "MRtrix3"
+    git clone https://github.com/MRtrix3/mrtrix3.git
+    cd mrtrix3
+    ./configure
+    ./build
 # begin cat command - see below
     cat <<EOT >> ${KUL_apps_config}
 # adding MRTRIX3
@@ -307,7 +308,6 @@ export PATH="${install_location}/mrtrix3/bin:\$PATH"
 EOT
 # end cat command - see above
     ${install_location}/KUL_apps/mrtrix/install_mime_types.sh
-    fi
     
     echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_app_versions
 
@@ -600,7 +600,7 @@ if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ]; then
     cat <<EOT >> ${KUL_apps_config}
 # adding KUL_NeuroImaging_Tools
 export PATH=${install_location}/KUL_NeuroImaging_Tools:\$PATH
-export PYTHONPATH=${install_location}/mrtrix3/lib
+export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
 
 EOT
     echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git status | head -2 | tail -1)\"" >> $KUL_app_versions
