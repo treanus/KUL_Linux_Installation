@@ -507,7 +507,6 @@ else
     echo "Already installed ANTs"
 fi
 
-exit
 
 # Installation of dcm2niix
 if ! command -v dcm2niix &> /dev/null; then
