@@ -6,7 +6,14 @@
 #  current version dd 01112021 - v0.6
 
 # ask each time to install a program
-auto=1
+if [ ! -z $1 ]; then
+    if [ $1 = "auto" ]; then
+        auto=1
+    fi
+else 
+    auto=0
+fi
+
 # do you want to install cuda (only for an nvidia GPU)
 install_cuda=1
 
@@ -14,7 +21,7 @@ install_cuda=1
 # Define the install location
 install_location=/usr/local/KUL_apps
 KUL_apps_config="${install_location}/KUL_apps_config"
-KUL_app_versions="${install_location}/KUL_apps_versions"
+KUL_apps_versions="${install_location}/KUL_apps_versions"
 
 
 # check the operating system
@@ -37,7 +44,7 @@ fi
 echo "This script will install a lot of neuro-imaging software on ${os_name}"
 
 
-# First define a function to keep installation of things tidy
+# Define functions to keep installation of things tidy
 function install_KUL_apps {
     cd ${install_location}
     source $bashfile
@@ -107,8 +114,11 @@ if [ ! -f ${install_location}/.KUL_apps_make_installdir ]; then
     touch ${install_location}/.KUL_apps_make_installdir
 fi
 
-# Install requirements - TODO: check what is needed!
+
+# Install requirements - TODO: check what is *really* needed!
 if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
+    
+    # LINUX AND WSL2
     if [ $local_os -gt 1 ]; then
         echo -e "\n"
         echo "We first install a number of needed packages"
@@ -125,16 +135,73 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
         if [ $local_os -eq 2 ];then
             sudo apt -y install nautilus
         fi
+        touch ${install_location}/.KUL_apps_install_required_yes  
+
+
+    # macOS
     elif [ $local_os -eq 1 ]; then
+
         # Install command line developer tools
         if xcode-select --install 2>&1 | grep installed; then
-            echo "Already installed command line developer tools"
+            echo "Already installed command line developer tools - ignore the warning/error"
         else
             echo "Installing command line developer tools"
+            install_KUL_apps "command line developer tools"
             xcode-select --install
         fi
-    fi  
-    touch ${install_location}/.KUL_apps_install_required_yes  
+
+        # Check for Homebrew, install if we don't have it
+        if ! command -v brew &> /dev/null; then
+            install_KUL_apps "brew"
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+
+        # Update homebrew recipes
+        brew update
+        
+        # install a number of brew packages
+        echo -e "\n\n\n"
+        echo "Installing packages..."
+        echo "  you may see errors or warnings if packages are already installed"
+        sleep 3
+        brew install git
+        brew install hub
+        brew install jq
+        brew install wget
+        brew install eigen
+        brew install qt
+        brew install pkg-config
+        brew install libtiff
+        brew install fftw
+        brew install mmv
+        brew install cmake
+        brew install netpbm
+        brew install openblas
+        brew install zlib
+        brew install lapack
+
+        echo -e "\n\n\n"
+        echo "Installing cask apps..."
+        echo "  you may see errors or warnings if programs are already installed"
+        sleep 3
+        brew install --cask visual-studio-code
+        brew install --cask xquartz
+        brew install --cask cyberduck
+        brew install --cask docker
+        brew install --cask firefox
+        brew install --cask menumeters
+        brew install --cask osirix-quicklook
+        brew install --cask quicklook-json
+        brew install --cask quicklook-csv
+
+        echo -e "\n\n\n"
+        echo "Now:"
+        echo "  manually setup docker (open app and install)"
+        echo "  reboot and run the KNT_Linux_install.sh again from a new terminal"
+        touch ${install_location}/.KUL_apps_install_required_yes  
+        exit
+
+    fi   
 fi
 
 
@@ -143,7 +210,7 @@ if [ ! -f ${KUL_apps_config} ]; then
     # the KUL_apps_config
     echo "export KUL_apps_DIR=${install_location}" > ${KUL_apps_config}
     # the KUL_apps_version
-    cat <<EOT > $KUL_app_versions
+    cat <<EOT > $KUL_apps_versions
 #!/bin/bash
 EOT
     # update ${bashfile}
@@ -156,12 +223,11 @@ fi
 
 
 # Installation of Anaconda --- BEGIN
-if ! command -v conda &> /dev/null
-then
+if ! command -v conda &> /dev/null; then
     install_KUL_apps "Anaconda3"
     if [ $local_os -eq 1 ]; then
         anaconda_version=Anaconda3-2021.05-MacOSX-x86_64.pkg
-        curl -o ${anaconda_version} https://repo.anaconda.com/archive/${anaconda_version}
+        wget https://repo.anaconda.com/archive/${anaconda_version}
         sudo installer -pkg ${anaconda_version} -target ${install_location}
     else
         anaconda_version=Anaconda3-2021.05-Linux-x86_64.sh
@@ -200,7 +266,7 @@ EOT
     fi
 
     rm ${anaconda_version}
-    echo "echo -e \"\t Anaconda3\t-\t${anaconda_version}" \" >> $KUL_app_versions
+    echo "echo -e \"\t Anaconda3\t-\t${anaconda_version}" \" >> $KUL_apps_versions
     echo -e "\n\n\n"
     echo "Now exit all ${os_name} terminals and run the KNT_Linux_install.sh again from a new terminal"
     
@@ -218,15 +284,8 @@ then
 
     echo "# KUL_apps - Setting up some useful stuff" >> ${KUL_apps_config}
     echo "alias ll='ls -alhF'" >> ${KUL_apps_config}
-    if [ $local_os -eq 2 ];then 
-        echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${bashpoint}
-        conda install -c anaconda wget
-        conda install -c anaconda pkgconfig
-        conda install -c anaconda openblas
-        conda install -c conda-forge lapack
-        conda install -c conda-forge zlib
-        conda install -c conda-forge eigen
-        conda install -c conda-forge qt
+    if [ $local_os -eq 1 ];then 
+        echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${KUL_apps_config}
     fi
     if [ $local_os -eq 2 ];then 
         echo "alias code='code &'" >> ${KUL_apps_config}
@@ -266,8 +325,6 @@ if [ ! command -v code &> /dev/null ] && [ $local_os -gt 1 ]; then
     sudo apt-get -y update
     sudo apt-get -y install code
     rm packages.microsoft.gpg
-elif [ $local_os -eq 1 ]; then
-    echo "Install Visual Studio Code manually please"
 else
     echo "Already installed Visual Studio Code"
 fi
@@ -279,13 +336,9 @@ then
     install_KUL_apps "HD-BET"
     git clone https://github.com/MIC-DKFZ/HD-BET
     cd HD-BET
-    if [ $local_os -eq 1 ]; then
-        sudo pip install -e .
-    else
-        pip install -e .
-    fi
+    sudo pip install -e . # sudo needed for macOS, check if needed for Linux/WSL2 next time
     cd
-    echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+    echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git fetch; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     if [ $local_os -eq 1 ]; then
         echo "" >> ${KUL_apps_config}
         echo "# Setting up HD-BET" >> ${KUL_apps_config}
@@ -300,10 +353,10 @@ fi
 if ! command -v mrconvert &> /dev/null; then
     install_KUL_apps "MRtrix3"
     git clone https://github.com/MRtrix3/mrtrix3.git
-    cd mrtrix3
-    if [ $local_os -eq 1 ]; then
+    cd mrtrix3 
+    if [ $local_os -eq 1 ];then
         ./configure -conda
-    else  
+    else
         ./configure
     fi
     ./build
@@ -316,18 +369,17 @@ EOT
 # end cat command - see above
     ${install_location}/KUL_apps/mrtrix/install_mime_types.sh
     
-    echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_app_versions
+    echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_apps_versions
 
 else
     echo "Already installed MRtrix3"
 fi
 
 
+
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
-    if [ $local_os -eq 1 ]; then
-        echo "Please install docker desktop manually on macOS"
-    else
+    if [ $local_os -gt 1 ]; then
         install_KUL_apps "Docker"
         sudo apt-get -y update
         sudo apt-get -y remove docker docker-engine docker.io
@@ -345,8 +397,6 @@ fi
 # lets's make install current
 source ${bashfile}
 
-
-
 # download a number of Docker containers
 if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
     echo "Now installing some useful docker containers"
@@ -357,14 +407,14 @@ if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
         echo "See to it that Docker Desktop is setup and running"
         read -p "Press any key to continue... " -n1 -s
         echo "Not installing hd-glio-auto on macOS (no compatible GPU)"
-        echo "echo -e \"\t hd-glio-auto\t-\tcannot be installed (no compatible GPU) \"" >> $KUL_app_versions
+        echo "echo -e \"\t hd-glio-auto\t-\tcannot be installed (no compatible GPU) \"" >> $KUL_apps_versions
     else
         docker pull jenspetersen/hd-glio-auto
-        echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_app_versions
+        echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
     fi
     echo "Installing synb0"
     docker pull hansencb/synb0
-    echo "echo -e \"\t synb0\t\t-\tcannot be checked (but latest docker) \"" >> $KUL_app_versions
+    echo "echo -e \"\t synb0\t\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
     touch ${install_location}/.KUL_apps_install_containers_yes
 else
     echo "Already installed required docker containers"
@@ -378,7 +428,9 @@ if ! command -v fslmaths &> /dev/null; then
         sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
     fi
     wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
-    sudo apt-get -y install python2.7
+    if [ $local_os -gt 1 ]; then
+        sudo apt-get -y install python2.7
+    fi
     echo -e "\n\n\n"
     echo "Here we give the installation instructions for FSL..."
     echo "it is ok to install to the default /usr/local/fsl directory"
@@ -393,7 +445,7 @@ PATH=\${FSLDIR}/bin:\${PATH}
 export FSLDIR PATH
 
 EOT
-    echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_app_versions
+    echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_apps_versions
 
 else
     echo "Already installed FSL"
@@ -421,7 +473,7 @@ source \$FREESURFER_HOME/SetUpFreeSurfer.sh
 EOT
 
     #sudo apt-get -y install tcsh
-    echo "echo -e \"\t freesurfer\t-\t\$(recon-all -version) \"" >> $KUL_app_versions
+    echo "echo -e \"\t freesurfer\t-\t\$(recon-all -version) \"" >> $KUL_apps_versions
     mkdir -p ${install_location}/freesurfer_license
     echo "Install the license.txt into ${install_location}/reesurfer_license"
     rm ${freesurfer_file}.tar.gz
@@ -436,9 +488,7 @@ if ! [ -d "${install_location}/ANTs_installed" ]; then
     install_KUL_apps "Ants"
     wget https://raw.githubusercontent.com/cookpa/antsInstallExample/master/installANTs.sh
     chmod +x installANTs.sh
-    if [ $local_os -eq 1 ]; then
-        conda install -y  -c anaconda cmake
-    else
+    if [ $local_os -gt 1 ]; then
         sudo apt-get -y install cmake pkg-config
     fi
     ./installANTs.sh
@@ -452,11 +502,12 @@ export ANTSPATH=${install_location}/ANTs_installed/bin/
 export PATH=\${ANTSPATH}:\$PATH
 
 EOT
-    echo "echo -e \"\t ants\t\t-\t\$(antsRegistration --version | head -1 | awk '{ print \$3 }') \"" >> $KUL_app_versions
+    echo "echo -e \"\t ants\t\t-\t\$(antsRegistration --version | head -1 | awk '{ print \$3 }') \"" >> $KUL_apps_versions
 else
     echo "Already installed ANTs"
 fi
 
+exit
 
 # Installation of dcm2niix
 if ! command -v dcm2niix &> /dev/null; then
@@ -471,7 +522,7 @@ if ! command -v dcm2niix &> /dev/null; then
 export PATH=${install_location}/dcm2niix/build/bin:\$PATH
 
 EOT
-    echo "echo -e \"\t dcm2nixx\t-\t\$(dcm2niix --version | head -1 | awk '{ print \$5 }') \"" >> $KUL_app_versions 
+    echo "echo -e \"\t dcm2nixx\t-\t\$(dcm2niix --version | head -1 | awk '{ print \$5 }') \"" >> $KUL_apps_versions 
 else
     echo "Already installed dcm2niix"
 fi
@@ -481,7 +532,7 @@ fi
 if ! command -v dcm2bids &> /dev/null; then
     install_KUL_apps "dcm2bids"
     pip install dcm2bids
-    echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_app_versions 
+    echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_apps_versions 
 else
     echo "Already installed dcm2bids"
 fi
@@ -491,7 +542,7 @@ fi
 if ! command -v storescu &> /dev/null; then
     install_KUL_apps "DCMTK"
     if [ $local_os -eq 1 ]; then
-        conda install -y  -c bioconda dcmtk
+        brew install dcmtk
     else
         sudo apt-get -y install dcmtk
     fi
@@ -504,7 +555,7 @@ fi
 if ! command -v gdcmtar &> /dev/null; then
     install_KUL_apps "GDCM"
     if [ $local_os -eq 1 ]; then
-        pip install python-gdcm
+        brew install gdcm
     else
         sudo apt-get -y install libgdcm-tools
     fi
@@ -541,7 +592,7 @@ if ! [ -d "${install_location}/spm12" ]; then
         cd ${install_location}
     fi
     rm spm12.zip
-    echo "echo -e \"\t spm12\t\t-\tcheck from within matlab please \"" >> $KUL_app_versions
+    echo "echo -e \"\t spm12\t\t-\tcheck from within matlab please \"" >> $KUL_apps_versions
 else
     echo "Already installed spm12"
 fi
@@ -553,7 +604,7 @@ if ! [ -d "${install_location}/spm12/toolbox/cat12" ]; then
     wget http://www.neuro.uni-jena.de/cat12/cat12_latest.zip
     unzip cat12_latest.zip -d spm12/toolbox
     rm cat12_latest.zip
-    echo "echo -e \"\t cat12\t\t-\tcheck from within matlab please \"" >> $KUL_app_versions
+    echo "echo -e \"\t cat12\t\t-\tcheck from within matlab please \"" >> $KUL_apps_versions
 else
     echo "Already installed cat12"
 fi
@@ -570,7 +621,7 @@ if ! [ -d "${install_location}/leaddbs" ]; then
     read -p "Press any key to continue... " -n1 -s
     unzip leaddbs_data.zip -d leaddbs/
     rm leaddbs_data.zip
-    echo "echo -e \"\t Lead-DBS\t\t-\tcheck from within matlab please \"" >> $KUL_app_versions
+    echo "echo -e \"\t Lead-DBS\t\t-\tcheck from within matlab please \"" >> $KUL_apps_versions
 else
     echo "Already installed Lead-DBS"
 fi
@@ -584,7 +635,7 @@ if ! [ -d "${install_location}/${conn_version}" ]; then
     unzip ${conn_version}.zip
     mv conn ${conn_version}
     rm ${conn_version}.zip
-    echo "echo -e \"\t conn\t\t-\t${conn_version} \"" >> $KUL_app_versions
+    echo "echo -e \"\t conn\t\t-\t${conn_version} \"" >> $KUL_apps_versions
 else
     echo "Already installed conn-toolbox version ${conn_version}"
 fi
@@ -610,7 +661,7 @@ export PATH=${install_location}/KUL_NeuroImaging_Tools:\$PATH
 export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
 
 EOT
-    echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+    echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
 else
     echo "Already installed KUL_NeuroImaging_Tools"
 fi
@@ -625,7 +676,7 @@ if ! [ -d "${install_location}/KUL_VBG" ]; then
 export PATH=${install_location}/KUL_VBG:\$PATH
 
 EOT
-    echo "echo -e \"\t KUL_VBG\t-\t\$(cd $KUL_apps_DIR/KUL_VBG; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+    echo "echo -e \"\t KUL_VBG\t-\t\$(cd $KUL_apps_DIR/KUL_VBG; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
 else
     echo "Already installed KUL_VBG"
 fi
@@ -644,7 +695,7 @@ then
 export PATH="${install_location}/KUL_FWT:\$PATH"
 
 EOT
-    echo "echo -e \"\t KUL_FWT\t-\t\$(cd $KUL_apps_DIR/KUL_FWT; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+    echo "echo -e \"\t KUL_FWT\t-\t\$(cd $KUL_apps_DIR/KUL_FWT; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
 else
     echo "Already installed KUL_FWT"
 fi
@@ -659,7 +710,7 @@ if ! command -v scil_filter_tractogram.py &> /dev/null; then
     git clone https://github.com/scilus/scilpy.git
     cd scilpy
     pip install -e .
-    echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+    echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
 
 else
     echo "Already installed Scilpy"
@@ -678,7 +729,7 @@ EOT
     source ${install_location}/KUL_apps_config
     # install Pytorch
     conda install -y  pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch
-    echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git status | head -2 | tail -1)\"" >> $KUL_app_versions
+    echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
 
 elif [ $local_os -eq 1 ]; then
     echo "On macOS we will use the docker version of Fastsurfer"
@@ -765,7 +816,7 @@ if [ ! -f ${KULcheck} ]; then
     echo "echo \"  installation DIR is  ${install_location}\" " >> ${KUL_apps_config}
     echo "echo \"  the config file is   ${KUL_apps_config}\" " >> ${KUL_apps_config}
     echo "echo \"  installed software/version is: \"" >> ${KUL_apps_config}
-    echo "source $KUL_app_versions" >> ${KUL_apps_config}
+    echo "source $KUL_apps_versions" >> ${KUL_apps_config}
     echo "echo \" \" " >> ${KUL_apps_config}
     touch $KULcheck
 fi
