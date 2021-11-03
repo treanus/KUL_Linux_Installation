@@ -310,7 +310,7 @@ if ! command -v mrconvert &> /dev/null; then
 # begin cat command - see below
     cat <<EOT >> ${KUL_apps_config}
 # adding MRTRIX3
-export PATH="${install_location}/mrtrix3/bin:\$PATH"
+export PATH=${install_location}/mrtrix3/bin:\$PATH
 
 EOT
 # end cat command - see above
