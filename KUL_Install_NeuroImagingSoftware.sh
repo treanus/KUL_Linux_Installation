@@ -49,13 +49,14 @@ function install_KUL_apps {
     cd ${install_location}
     source $bashfile
     echo -e "\n"
+    do_not_install=0
     if [ $auto -eq 0 ]; then
         read -r -p "Proceed with the installation of $1? [Y/n] " prompt
         prompt=${prompt:-y}
         if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]; then
             echo 'OK we continue'
         else
-            exit
+            do_not_install=1
         fi
     fi
 }
@@ -286,6 +287,7 @@ then
     echo "alias ll='ls -alhF'" >> ${KUL_apps_config}
     if [ $local_os -eq 1 ];then 
         echo "export BASH_SILENCE_DEPRECATION_WARNING=1" >> ${KUL_apps_config}
+        echo "export PATH=\$HOME/.local/bin:\$PATH" >> ${KUL_apps_config}
     fi
     if [ $local_os -eq 2 ];then 
         echo "alias code='code &'" >> ${KUL_apps_config}
@@ -620,7 +622,7 @@ if ! [ -d "${install_location}/leaddbs" ]; then
     read -p "Press any key to continue... " -n1 -s
     unzip leaddbs_data.zip -d leaddbs/
     rm leaddbs_data.zip
-    echo "echo -e \"\t Lead-DBS\t\t-\tcheck from within matlab please \"" >> $KUL_apps_versions
+    echo "echo -e \"\t Lead-DBS\t-\tcheck from within matlab please \"" >> $KUL_apps_versions
 else
     echo "Already installed Lead-DBS"
 fi
@@ -739,6 +741,7 @@ fi
 # Installation of Karawun
 if ! [ -f "${install_location}/.KUL_apps_installed_karawun" ]; then
     install_KUL_apps "Karawun"
+    sudo chown -R "$(id -u):$(id -g)" $HOME/.conda
     conda config --append channels conda-forge --append channels anaconda --append channels SimpleITK
     conda install -y  git
     conda create --name KarawunEnv --file https://github.com/DevelopmentalImagingMCRI/karawun/raw/master/requirements.txt
@@ -768,13 +771,14 @@ if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
         ./MeVisLabSDK3.4.3_gcc7-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
         rm MeVisLabSDK3.4.3_gcc7-64.bin
     fi
+    touch ${install_location}/.KUL_apps_installed_mevislab
 else
     echo "Already installed MevislabSDK3.4"
 fi
 
 
 # Installation of Robex
-if ! [ -d "${install_location}/ROBEX/" ]; then
+if ! [ -d "${install_location}/ROBEX/" ] && [ $local_os -gt 1 ]; then
     install_KUL_apps "ROBEX"
     wget -qO- "https://www.nitrc.org/frs/download.php/5994/ROBEXv12.linux64.tar.gz//?i_agree=1&download_now=1" | \
         tar zx -C ${install_location}
@@ -784,6 +788,8 @@ export PATH="${install_location}/ROBEX:\$PATH"
 
 EOT
 
+elif [ $local_os -eq 1 ]; then
+    echo "Not installing Robex on macOS"
 else
     echo "Already installed ROBEX"
 fi
