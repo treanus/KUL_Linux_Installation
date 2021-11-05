@@ -368,7 +368,6 @@ else
     echo "Already installed HD-BET"
 fi
 
-exit
 
 # Installation of MRtrix3
 if ! command -v mrconvert &> /dev/null; then
