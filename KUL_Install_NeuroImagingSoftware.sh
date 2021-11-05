@@ -200,9 +200,13 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
         brew install --cask quicklook-csv
 
         echo -e "\n\n\n"
+        echo "KUL_Install_NeuroImagingSoftware:"
         echo "Now:"
-        echo "  manually setup docker (open app and install)"
-        echo "  reboot and run the KNT_Linux_install.sh again from a new terminal"
+        echo "  1/ manually setup docker (open app and set up)"
+        echo "  2/ if you are behind a strict (hospital/university) firewall you may want to copy the line below:"
+        echo "      git config --global url."https://".insteadOf git://"
+        echo "      into another terminal and execute"
+        echo "  3/ reboot and run the KNT_Linux_install.sh again from a new terminal"
         touch ${install_location}/.KUL_apps_install_required_yes  
         exit
 
