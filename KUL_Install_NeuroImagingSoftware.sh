@@ -484,14 +484,27 @@ fi
 
 # Installation of Freesurfer
 if ! command -v freeview &> /dev/null; then
-    freesurfer_version="7.2.0"
-    install_KUL_apps "Freesurfer v ${freesurfer_version}"
-    if [ $do_not_install -eq 0 ]; then 
-        if [ $local_os -eq 1 ]; then
+    echo "KUL_apps: which version do you want to install"
+    echo "  1 - v6.0.0 (recommended)"
+    echo "  2 - v7.2.0"
+    read -r -p "Freesurfer version: [1/2] " fs_prompt
+    if [[ $fs_prompt == "2" ]]; then
+       freesurfer_version="7.2.0"
+       if [ $local_os -eq 1 ]; then
             freesurfer_file="freesurfer-darwin-macOS-7.2.0"
         else
             freesurfer_file="freesurfer-linux-ubuntu18_amd64-7.2.0"
         fi
+    else
+        freesurfer_version="6.0.0"
+        if [ $local_os -eq 1 ]; then
+            freesurfer_file="freesurfer-Darwin-OSX-stable-pub-v6.0.0"
+        else
+            freesurfer_file="freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0"
+        fi
+    fi
+    install_KUL_apps "Freesurfer v ${freesurfer_version}"
+    if [ $do_not_install -eq 0 ]; then 
         wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/${freesurfer_version}/${freesurfer_file}.tar.gz
         tar -zxvpf ${freesurfer_file}.tar.gz
         cat <<EOT >> ${KUL_apps_config}
