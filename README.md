@@ -32,32 +32,27 @@ The script installs the latest stable versions of:
 
 ## Prerequisites
 ### All
-- Matlab (R2017b or later)
+- Matlab (R2017b or later) - needed if you use spm12, conn, cat12, lead-dbs
 
 ### Linux
-Should run out of the box.
-You may want to update your linux system:
-
-<code> 
-sudo apt update
-
-sudo apt upgrade 
-</code>
+- Should run out of the box.
+- follow the instructions given by the installer
 
 ### Windows with WSL2
 - Install win11, perform all updates
 - Install nvidia-cuda: follow https://docs.microsoft.com/en-us/windows/ai/directml/gpu-cuda-in-wsl
-- Open powershell as administrator and exe: wsl --install & reboot
+- Open powershell as administrator and exe: wsl --install
+- reboot when asked
 - after reboot you will be asked to setup the user/passwd
 - INSIDE WIN11: install 
     - visual studio code
     - docker desktop & setup the ubuntu as wsl integration
-- open Ubuntu in wsl2 and perform sudo apt upadte and sudo apt upgrade
+- open Ubuntu in wsl2
+- follow the instructions given by the installer
 
 ### macOS
-- Install Docker Desktop and set it up
-- Install Visual Studio Code
-- Install XQuartz
+- Should work out of the box
+- follow the instructions given by the installer
 
 
 ## Installation notes
