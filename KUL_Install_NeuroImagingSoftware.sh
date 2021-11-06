@@ -907,6 +907,23 @@ else
     echo "Already installed ROBEX"
 fi
 
+
+# Installation of Spinal Cord Toolbox
+program="spinalcordtoolbox"
+if ! [ -d "${install_location}/${program}" ]; then
+    install_KUL_apps ${program}
+    if [ $do_not_install -eq 0 ]; then
+        git clone https://github.com/spinalcordtoolbox/spinalcordtoolbox
+        cd spinalcordtoolbox
+        ./install_sct
+    else
+        echo "ok - you choose not to install ${program}"
+    fi
+else
+    echo "Already installed ${program}"
+fi
+
+
 # Installation of nvtop
 if [ ! command -v nvtop &> /dev/null ] && [ $local_os -gt 1 ]; then
     install_KUL_apps "nvtop"
