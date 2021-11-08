@@ -127,12 +127,45 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
         sleep 4
         sudo apt update
         sudo apt upgrade
-        sudo apt -y install git \
-            libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
-            g++ zlib1g-dev \
-            python-is-python3 libeigen3-dev zlib1g-dev libqt5opengl5-dev libqt5svg5-dev libgl1-mesa-dev libfftw3-dev libtiff5-dev libpng-dev \
+        sudo apt -y install \
+            git \
+            libgl1-mesa-glx \
+            libegl1-mesa \
+            libxrandr2 \
+            libxss1 \
+            libxcursor1 \
+            libxcomposite1 \
+            libasound2 \
+            libxi6 \
+            libxtst6 \
+            g++ \
+            zlib1g-dev \
+            python-is-python3 \
+            libeigen3-dev \
+            libqt5opengl5-dev \
+            libqt5svg5-dev \
+            libgl1-mesa-dev \
+            libfftw3-dev \
+            libtiff5-dev \
+            libpng-dev \
             tcsh \
-            cmake pkg-config
+            cmake \
+            pkg-config \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libblas-dev \
+            liblapack-dev \
+            libopenblas0 \
+            dc \
+            python \
+            mesa-utils \
+            gedit \
+            pulseaudio \
+            libquadmath0 \
+            libgtk2.0-0 \
+            firefox \
+            python2.7 
+
         if [ $local_os -eq 2 ];then
             sudo apt -y install nautilus
         fi
@@ -315,7 +348,7 @@ fi
 # install cuda toolkit
 if [ $local_os -eq 2 ]; then
     echo "Already installed cuda in win11"
-elif [ $local_os -eq 3 ]; then
+elif [ $local_os -eq 15 ]; then
     if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
@@ -456,13 +489,13 @@ fi
 if ! command -v fslmaths &> /dev/null; then
     install_KUL_apps "FSL"
     if [ $do_not_install -eq 0 ]; then 
-        if [ $local_os -eq 2 ]; then
-            sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
-        fi
+        #if [ $local_os -eq 2 ]; then
+        #    sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
+        #fi
         wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
-        if [ $local_os -gt 1 ]; then
-            sudo apt-get -y install python2.7
-        fi
+        #if [ $local_os -gt 1 ]; then
+        #    sudo apt-get -y install python2.7
+        #fi
         echo -e "\n\n\n"
         echo "Here we give the installation instructions for FSL..."
         echo "it is ok to install to the default /usr/local/fsl directory"
@@ -539,9 +572,9 @@ if ! [ -d "${install_location}/ANTs_installed" ]; then
     if [ $do_not_install -eq 0 ]; then
         wget https://raw.githubusercontent.com/cookpa/antsInstallExample/master/installANTs.sh
         chmod +x installANTs.sh
-        if [ $local_os -gt 1 ]; then
-            sudo apt-get -y install cmake pkg-config
-        fi
+        #if [ $local_os -gt 1 ]; then
+        #    sudo apt-get -y install cmake pkg-config
+        #fi
         ./installANTs.sh
         mv install ANTs_installed
         rm installANTs.sh
@@ -735,7 +768,7 @@ if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ]; then
         #git checkout development
         #cd ..
         if [ $local_os -gt 1 ]; then
-            sudo apt-get install libopenblas0
+            #sudo apt-get install libopenblas0
             cp KUL_NeuroImaging_Tools/share/eddy_cuda11.2_linux.tar.gz .
             tar -xzvf eddy_cuda11.2_linux.tar.gz
             rm eddy_cuda11.2_linux.tar.gz
@@ -802,9 +835,9 @@ fi
 if ! command -v scil_filter_tractogram.py &> /dev/null; then
     install_KUL_apps "Scilpy"
     if [ $do_not_install -eq 0 ]; then
-        if [ $local_os -gt 1 ]; then
-            sudo apt-get -y install libblas-dev liblapack-dev
-        fi
+        #if [ $local_os -gt 1 ]; then
+        #    sudo apt-get -y install libblas-dev liblapack-dev
+        #fi
         git clone https://github.com/scilus/scilpy.git
         cd scilpy
         pip install -e .
@@ -928,7 +961,7 @@ fi
 if [ ! command -v nvtop &> /dev/null ] && [ $local_os -gt 1 ]; then
     install_KUL_apps "nvtop"
     if [ $do_not_install -eq 0 ]; then
-        sudo apt install cmake libncurses5-dev libncursesw5-dev
+        #sudo apt install cmake libncurses5-dev libncursesw5-dev
         git clone https://github.com/Syllo/nvtop.git
         mkdir -p nvtop/build && cd nvtop/build
         cmake ..
