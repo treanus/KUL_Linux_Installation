@@ -69,7 +69,8 @@ if [ ! -f $HOME/.KUL_apps_install_yes ]; then
     echo "      You may have to exit the shell several times, after which you have to restart the script."
     echo "      The script will check what has already been installed and continue installing software"
     echo "      This script may ask you a several times for your password in order to install software (sudo usage)"
-    read -r -p "Proceed with the installation? [y/n] " prompt
+    read -r -p "Proceed with the installation? [Y/n] " prompt
+    prompt=${prompt:-y}
     if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]; then
         echo 'OK we continue'
         touch $HOME/.KUL_apps_install_yes
@@ -88,7 +89,8 @@ if [ $local_os -eq 2 ] && [ ! -f $HOME/.KUL_apps_install_wsl2_yes ]; then
     echo "      1/ enable nvidia cuda in WSL following https://docs.microsoft.com/en-us/windows/ai/directml/gpu-cuda-in-wsl "
     echo "      2/ install docker in win11 and setup wsl2 - ubuntu integration"
     echo "      otherwise, exit the script (answer "no" below) and do this first"
-    read -r -p "Proceed with the installation? [y/n] " prompt
+    read -r -p "Proceed with the installation? [Y/n] " prompt
+    prompt=${prompt:-y}
     if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
     then
         echo 'OK we continue'
@@ -436,6 +438,35 @@ else
 fi
 
 
+# Installation of KNT
+if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ]; then
+    install_KUL_apps "KUL_NeuroImaging_Tools"
+    if [ $do_not_install -eq 0 ]; then
+        git clone https://github.com/treanus/KUL_NeuroImaging_Tools.git
+        #cd KUL_NeuroImaging_Tools
+        #git checkout development
+        #cd ..
+        if [ $local_os -gt 1 ]; then
+            #sudo apt-get install libopenblas0
+            cp KUL_NeuroImaging_Tools/share/eddy_cuda11.2_linux.tar.gz .
+            tar -xzvf eddy_cuda11.2_linux.tar.gz
+            rm eddy_cuda11.2_linux.tar.gz
+            sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
+        fi
+        cat <<EOT >> ${KUL_apps_config}
+# adding KUL_NeuroImaging_Tools
+export PATH=${install_location}/KUL_NeuroImaging_Tools:\$PATH
+export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
+
+EOT
+        echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+    else
+        echo "ok - you choose not to install KUL_NeuroImaging_Tools"
+    fi
+else
+    echo "Already installed KUL_NeuroImaging_Tools"
+fi
+
 
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
@@ -455,6 +486,43 @@ if ! command -v docker &> /dev/null; then
     fi
 else
     echo "Already installed Docker"
+fi
+
+
+# Installation of dcm2niix
+if ! command -v dcm2niix &> /dev/null; then
+    install_KUL_apps "dcm2niix"
+    if [ $do_not_install -eq 0 ]; then
+        git clone https://github.com/rordenlab/dcm2niix.git
+        cd dcm2niix
+        mkdir build && cd build
+        cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
+        make
+        cat <<EOT >> ${KUL_apps_config}
+# adding dcm2nixx
+export PATH=${install_location}/dcm2niix/build/bin:\$PATH
+
+EOT
+        echo "echo -e \"\t dcm2nixx\t-\t\$(dcm2niix --version | head -1 | awk '{ print \$5 }') \"" >> $KUL_apps_versions 
+    else
+        echo "ok - you choose not to install dcm2niix"
+    fi
+else
+    echo "Already installed dcm2niix"
+fi
+
+
+# Installation of dcm2bids
+if ! command -v dcm2bids &> /dev/null; then
+    install_KUL_apps "dcm2bids"
+    if [ $do_not_install -eq 0 ]; then
+        pip install dcm2bids
+        echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_apps_versions 
+    else
+        echo "ok - you choose not to install dcm2bids"
+    fi
+else
+    echo "Already installed dcm2bids"
 fi
 
 
@@ -595,43 +663,6 @@ else
 fi
 
 
-# Installation of dcm2niix
-if ! command -v dcm2niix &> /dev/null; then
-    install_KUL_apps "dcm2niix"
-    if [ $do_not_install -eq 0 ]; then
-        git clone https://github.com/rordenlab/dcm2niix.git
-        cd dcm2niix
-        mkdir build && cd build
-        cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
-        make
-        cat <<EOT >> ${KUL_apps_config}
-# adding dcm2nixx
-export PATH=${install_location}/dcm2niix/build/bin:\$PATH
-
-EOT
-        echo "echo -e \"\t dcm2nixx\t-\t\$(dcm2niix --version | head -1 | awk '{ print \$5 }') \"" >> $KUL_apps_versions 
-    else
-        echo "ok - you choose not to install dcm2niix"
-    fi
-else
-    echo "Already installed dcm2niix"
-fi
-
-
-# Installation of dcm2bids
-if ! command -v dcm2bids &> /dev/null; then
-    install_KUL_apps "dcm2bids"
-    if [ $do_not_install -eq 0 ]; then
-        pip install dcm2bids
-        echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_apps_versions 
-    else
-        echo "ok - you choose not to install dcm2bids"
-    fi
-else
-    echo "Already installed dcm2bids"
-fi
-
-
 # Installation of DCMTK
 if ! command -v storescu &> /dev/null; then
     install_KUL_apps "DCMTK"
@@ -756,36 +787,6 @@ if ! [ -d "${install_location}/${conn_version}" ]; then
     fi
 else
     echo "Already installed conn-toolbox version ${conn_version}"
-fi
-
-
-# Installation of KNT
-if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ]; then
-    install_KUL_apps "KUL_NeuroImaging_Tools"
-    if [ $do_not_install -eq 0 ]; then
-        git clone https://github.com/treanus/KUL_NeuroImaging_Tools.git
-        #cd KUL_NeuroImaging_Tools
-        #git checkout development
-        #cd ..
-        if [ $local_os -gt 1 ]; then
-            #sudo apt-get install libopenblas0
-            cp KUL_NeuroImaging_Tools/share/eddy_cuda11.2_linux.tar.gz .
-            tar -xzvf eddy_cuda11.2_linux.tar.gz
-            rm eddy_cuda11.2_linux.tar.gz
-            sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
-        fi
-        cat <<EOT >> ${KUL_apps_config}
-# adding KUL_NeuroImaging_Tools
-export PATH=${install_location}/KUL_NeuroImaging_Tools:\$PATH
-export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
-
-EOT
-        echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
-    else
-        echo "ok - you choose not to install KUL_NeuroImaging_Tools"
-    fi
-else
-    echo "Already installed KUL_NeuroImaging_Tools"
 fi
 
 
