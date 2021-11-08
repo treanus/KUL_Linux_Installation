@@ -131,6 +131,7 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
         sudo apt upgrade
         sudo apt -y install \
             git \
+            htop \
             libgl1-mesa-glx \
             libegl1-mesa \
             libxrandr2 \
@@ -480,6 +481,7 @@ if ! command -v docker &> /dev/null; then
             sudo systemctl enable docker
             sudo groupadd docker
             sudo usermod -aG docker $USER
+            newgrp docker
         else
             echo "ok - you choose not to install Docker - it is essential though in most cases..."
         fi
