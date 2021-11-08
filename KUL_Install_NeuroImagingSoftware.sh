@@ -143,7 +143,6 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             libxtst6 \
             g++ \
             zlib1g-dev \
-            python-is-python3 \
             libeigen3-dev \
             libqt5opengl5-dev \
             libqt5svg5-dev \
