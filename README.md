@@ -29,6 +29,7 @@ The script installs the latest stable versions of:
 - FastSurfer
 - Mevislab
 - Robex
+- Spinal Cord Toolbox
 
 ## Prerequisites
 ### All
