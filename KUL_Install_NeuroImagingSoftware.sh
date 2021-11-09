@@ -252,7 +252,7 @@ fi
 # initiate the config file to be sourced by ${bashfile}
 if [ ! -f ${KUL_apps_config} ]; then
     # the KUL_apps_config
-    echo "export KUL_apps_DIR=${install_location}" > ${KUL_apps_config}
+    echo "export KUL_apps_DIR="${install_location}"" > ${KUL_apps_config}
     # the KUL_apps_version
     cat <<EOT > $KUL_apps_versions
 #!/bin/bash
@@ -281,7 +281,7 @@ if ! command -v conda &> /dev/null; then
             echo -e "\n\n"
             echo "Here we give the installation instructions for anaconda..."
             echo "ACCEPT THE LICENSE"
-            echo "CHANGE THE INSTALL DIRECTORY to /usr/local/KUL_apps/anaconda3"
+            echo "INSTALL DIRECTORY = /usr/local/KUL_apps/anaconda3"
             echo "Say no NO initialize Anaconda3"
             read -p "Press any key to continue... " -n1 -s
             bash ${anaconda_version} -p ${install_location}
@@ -394,7 +394,7 @@ then
             pip install -e . # ??? sudo needed for macOS, check if needed for Linux/WSL2 next time
         fi
         cd
-        echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git fetch; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
         if [ $local_os -eq 1 ]; then
             echo "" >> ${KUL_apps_config}
             echo "# Setting up HD-BET" >> ${KUL_apps_config}
@@ -459,7 +459,7 @@ export PATH=${install_location}/KUL_NeuroImaging_Tools:\$PATH
 export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
 
 EOT
-        echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install KUL_NeuroImaging_Tools"
     fi
@@ -617,21 +617,22 @@ if ! command -v freeview &> /dev/null; then
 # adding freesurfer
 export FREESURFER_HOME=${install_location}/freesurfer
 export SUBJECTS_DIR=\$FREESURFER_HOME/subjects
-export FS_LICENSE=${install_location}/freesurfer_license/license.txt
+export FS_LICENSE=\$FREESURFER_HOME/license.txt
 source \$FREESURFER_HOME/SetUpFreeSurfer.sh
 
 EOT
 
         echo "echo -e \"\t freesurfer\t-\t\$(recon-all -version) \"" >> $KUL_apps_versions
-        mkdir -p ${install_location}/freesurfer_license
-        echo "Install the license.txt into ${install_location}/reesurfer_license"
+        echo "if [ ! -f \$FREESURFER_HOME/license.txt ]; then" >> ${KUL_apps_versions}
+        echo "  echo -e \"\t\t Warning: no freesufer license found in \${FREESURFER_HOME}\"" >> ${KUL_apps_versions}
+        echo "fi" >> ${KUL_apps_versions}
+        echo "Install the license.txt into \${FREESURFER_HOME}"
         rm ${freesurfer_file}.tar.gz
     else
         echo "ok - you choose not to install Freesurfer"
     fi    
 else
     echo "Already installed Freesurfer ${freesurfer_version}"
-    echo "  however do not forget to install the license.txt into ${install_location}/freesurfer_license"
 fi
 
 
@@ -701,10 +702,10 @@ fi
 # Setup of Matlab
 #if ! command -v matlab &> /dev/null
 #then
-#    echo "" >> $HOME/${bashfile}
-#    echo "# adding matlab" >> $HOME/${bashfile}
-#    echo "export PATH=/usr/local/MATLAB/R2018a/bin:\$PATH" >> $HOME/${bashfile}
-#    echo "alias matlab='xrandr --dpi 144; matlab &'" >> $HOME/${bashfile}
+#    echo "" >> ${bashfile}
+#    echo "# adding matlab" >> ${bashfile}
+#    echo "export PATH=/usr/local/MATLAB/R2018a/bin:\$PATH" >> ${bashfile}
+#    echo "alias matlab='xrandr --dpi 144; matlab &'" >> ${bashfile}
 #fi
 
 
@@ -801,7 +802,7 @@ if ! [ -d "${install_location}/KUL_VBG" ]; then
 export PATH=${install_location}/KUL_VBG:\$PATH
 
 EOT
-        echo "echo -e \"\t KUL_VBG\t-\t\$(cd $KUL_apps_DIR/KUL_VBG; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        echo "echo -e \"\t KUL_VBG\t-\t\$(cd $KUL_apps_DIR/KUL_VBG; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install KUL_VBG"
     fi
@@ -824,7 +825,7 @@ then
 export PATH="${install_location}/KUL_FWT:\$PATH"
 
 EOT
-        echo "echo -e \"\t KUL_FWT\t-\t\$(cd $KUL_apps_DIR/KUL_FWT; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        echo "echo -e \"\t KUL_FWT\t-\t\$(cd $KUL_apps_DIR/KUL_FWT; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install KUL_FWT"
     fi
@@ -843,7 +844,7 @@ if ! command -v scil_filter_tractogram.py &> /dev/null; then
         git clone https://github.com/scilus/scilpy.git
         cd scilpy
         pip install -e .
-        echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install Scilpy"
     fi
@@ -865,7 +866,7 @@ EOT
         source ${install_location}/KUL_apps_config
         # install Pytorch
         conda install -y  pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch
-        echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git fetch; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install FastSurfer"
     fi
@@ -951,6 +952,7 @@ if ! [ -d "${install_location}/${program}" ]; then
         git clone https://github.com/spinalcordtoolbox/spinalcordtoolbox
         cd spinalcordtoolbox
         ./install_sct
+        echo "echo -e \"\t spinalcord-tb\t-\t\$(cd $KUL_apps_DIR/spinalcordtoolbox; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install ${program}"
     fi
