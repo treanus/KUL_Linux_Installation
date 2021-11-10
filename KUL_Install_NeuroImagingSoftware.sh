@@ -350,7 +350,7 @@ fi
 # install cuda toolkit
 if [ $local_os -eq 2 ]; then
     echo "Already installed cuda in win11"
-elif [ $local_os -eq 15 ]; then
+elif [ $local_os -eq 1 ]; then
     if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
