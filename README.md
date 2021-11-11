@@ -31,16 +31,16 @@ The script installs the latest stable versions of:
 - Robex
 - Spinal Cord Toolbox
 
-## Prerequisites
-### All (but optional)
-- Matlab (R2017b or later) - only needed if you use spm12, conn, cat12, lead-dbs
-
 ## Output of a terminal after installation
 
 The terminal in WSL2, macOS and Linux will show which version of software is currently installed.
 
 ![Terminal output](figs4readme/terminal.png)
 
+## Prerequisites
+
+### All (but optional)
+- Matlab (R2017b or later) - only needed if you use spm12, conn, cat12, lead-dbs
 
 ### Linux
 - Should run out of the box.
