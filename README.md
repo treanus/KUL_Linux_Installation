@@ -1,6 +1,6 @@
 # Here's how to install Neuroimaging Software on Linux, WSL2 and macOS.
 
-This script installs a large number of NeuroImaging related software on Linux (Ubuntu 20.04 preferably), Windows-WSL2 (latest Win11 preferably) or macOS
+This script installs a large number of NeuroImaging related software on Linux (I prefer Linux Mint 20.2, but Ubuntu 20.04 also works), Windows-WSL2 (latest Win11 preferably) or macOS
 
 
 ## Which NeuroImaging software
