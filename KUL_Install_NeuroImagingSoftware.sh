@@ -861,6 +861,8 @@ if ! [ -d "${install_location}/FastSurfer/" ] && [ $local_os -gt 1 ]; then
         cat <<EOT >> ${KUL_apps_config}
 # adding FastSurfer
 export FASTSURFER_HOME="${install_location}/FastSurfer"
+export PATH=\$FASTSURFER_HOME:\$PATH
+export PATH=\$FASTSURFER_HOME/recon_surf:\$PATH
 
 EOT
         source ${install_location}/KUL_apps_config
