@@ -86,7 +86,9 @@ Rerun the script.
 
 <code> ./KUL_Install_NeuroImagingSoftware.sh </code>
 
-Depending on the cpu and the internet connection speed this will take a few hourOn some occasions you will be asked to enter your password and/or to confirm the installation.
+Depending on the cpu and the internet connection speed this will take a few hours.
+
+On some occasions you will be asked to enter your password and/or to confirm the installation.
 
 
 ## Post-Install
