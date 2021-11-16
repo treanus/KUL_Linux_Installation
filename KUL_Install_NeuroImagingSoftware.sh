@@ -900,7 +900,7 @@ export PATH=\$FASTSURFER_HOME/recon_surf:\$PATH
 EOT
         source ${install_location}/KUL_apps_config
         # install Pytorch
-        conda install -y  pytorch torchvision torchaudio cudatoolkit=11.2 -c pytorch
+        conda install -y  pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
         echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install FastSurfer"
