@@ -438,6 +438,28 @@ else
     echo "Already installed MRtrix3"
 fi
 
+# Installation of shard-recon
+if ! command -v dwimotioncorrect &> /dev/null; then
+    install_KUL_apps "shard-recon"
+    if [ $do_not_install -eq 0 ]; then 
+        git clone https://github.com/dchristiaens/shard-recon.git
+        cd shard-recon
+        ln -s ${install_location}/mrtrix3/build
+        ln -s ${install_location}/mrtrix3/bin/mrtrix3.py bin/
+        ./build
+        # begin cat command - see below
+        cat <<EOT >> ${KUL_apps_config}
+# adding shard-recon
+export PATH=${install_location}/shard-recon/bin:\$PATH
+
+EOT
+
+    else
+        echo "ok - you choose not to install shard-recon"
+    fi
+else
+    echo "Already installed shard-recon"
+fi
 
 # Installation of KNT
 if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ]; then
