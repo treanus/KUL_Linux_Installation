@@ -150,6 +150,7 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             libfftw3-dev \
             libtiff5-dev \
             libpng-dev \
+            python3-distutils \
             tcsh \
             cmake \
             pkg-config \
