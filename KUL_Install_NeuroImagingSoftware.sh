@@ -285,7 +285,7 @@ if ! command -v conda &> /dev/null; then
             echo "INSTALL DIRECTORY = /usr/local/KUL_apps/anaconda3"
             echo "Say no NO initialize Anaconda3"
             read -p "Press any key to continue... " -n1 -s
-            bash ${anaconda_version} -p ${install_location}
+            bash ${anaconda_version} -p ${install_location}/anaconda3
             echo "" >> ${KUL_apps_config}
             echo "# load Anaconda3"
 
