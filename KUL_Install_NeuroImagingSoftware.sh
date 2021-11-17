@@ -461,33 +461,30 @@ else
     echo "Already installed shard-recon"
 fi
 
-# Installation of KNT
-if ! [ -d "${install_location}/KUL_NeuroImaging_Tools" ]; then
-    install_KUL_apps "KUL_NeuroImaging_Tools"
+# Installation of KUL_NIS (KULeuven Neuro Imaging Suite)
+if ! [ -d "${install_location}/KUL_NIS" ]; then
+    install_KUL_apps "KUL_NIS"
     if [ $do_not_install -eq 0 ]; then
-        git clone https://github.com/treanus/KUL_NeuroImaging_Tools.git
-        #cd KUL_NeuroImaging_Tools
-        #git checkout development
-        #cd ..
+        git clone https://github.com/treanus/KUL_NIS.git
         if [ $local_os -gt 1 ]; then
             #sudo apt-get install libopenblas0
-            cp KUL_NeuroImaging_Tools/share/eddy_cuda11.2_linux.tar.gz .
+            cp KUL_NIS/share/eddy_cuda11.2_linux.tar.gz .
             tar -xzvf eddy_cuda11.2_linux.tar.gz
             rm eddy_cuda11.2_linux.tar.gz
             sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
         fi
         cat <<EOT >> ${KUL_apps_config}
-# adding KUL_NeuroImaging_Tools
-export PATH=${install_location}/KUL_NeuroImaging_Tools:\$PATH
+# adding KUL_NIS (KULeuven Neuro Imaging Suite)
+export PATH=${install_location}/KUL_NIS:\$PATH
 export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
 
 EOT
-        echo "echo -e \"\t KUL_NIT\t-\t\$(cd $KUL_apps_DIR/KUL_NeuroImaging_Tools; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        echo "echo -e \"\t KUL_NIS\t-\t\$(cd $KUL_apps_DIR/KUL_NIS; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
-        echo "ok - you choose not to install KUL_NeuroImaging_Tools"
+        echo "ok - you choose not to install KUL_NIS"
     fi
 else
-    echo "Already installed KUL_NeuroImaging_Tools"
+    echo "Already installed KUL_NIS"
 fi
 
 
