@@ -854,7 +854,7 @@ then
         git checkout dev_cshdp
         cd ..
         cat <<EOT >> ${KUL_apps_config}
-# adding KUL_VBG
+# adding KUL_FWT
 export PATH="${install_location}/KUL_FWT:\$PATH"
 
 EOT
