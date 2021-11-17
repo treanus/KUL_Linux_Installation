@@ -352,7 +352,7 @@ fi
 if [ $local_os -eq 2 ]; then
     echo "Already installed cuda in win11"
 elif [ $local_os -eq 1 ]; then
-    if [ $install_cuda -eq 1 ]; then
+    if [ $install_cuda -eq 3 ]; then
         if ! command -v nvcc &> /dev/null
         then
             wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
