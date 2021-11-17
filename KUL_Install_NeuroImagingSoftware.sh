@@ -998,22 +998,24 @@ fi
 
 
 # Installation of nvtop
-if [ ! command -v nvtop &> /dev/null ] && [ $local_os -gt 1 ]; then
-    install_KUL_apps "nvtop"
-    if [ $do_not_install -eq 0 ]; then
-        #sudo apt install cmake libncurses5-dev libncursesw5-dev
-        git clone https://github.com/Syllo/nvtop.git
-        mkdir -p nvtop/build && cd nvtop/build
-        cmake ..
-        make
-        sudo make install
-        cd ../..
-        rm -fr nvtop
-    else
-        echo "ok - you choose not to install nvtop"
+if ! command -v nvtop &> /dev/null; then
+    if [ $local_os -gt 1 ]; then
+        install_KUL_apps "nvtop"
+        if [ $do_not_install -eq 0 ]; then
+            #sudo apt install cmake libncurses5-dev libncursesw5-dev
+            git clone https://github.com/Syllo/nvtop.git
+            mkdir -p nvtop/build && cd nvtop/build
+            cmake ..
+            make
+            sudo make install
+            cd ../..
+            rm -fr nvtop
+        else
+            echo "ok - you choose not to install nvtop"
+        fi
+    elif [ $local_os -eq 1 ]; then
+        echo "Not installing nvtop on macOS"
     fi
-elif [ $local_os -eq 1 ]; then
-    echo "Not installing nvtop on macOS"
 else
     echo "Already installed nvtop"
 fi
