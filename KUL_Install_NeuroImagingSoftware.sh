@@ -575,10 +575,10 @@ if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
         docker pull jenspetersen/hd-glio-auto
         echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
     fi
-    echo "Installing synb0"
-    docker pull hansencb/synb0
-    echo "echo -e \"\t synb0\t\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
-    touch ${install_location}/.KUL_apps_install_containers_yes
+    #echo "Installing synb0"
+    #docker pull hansencb/synb0
+    #echo "echo -e \"\t synb0\t\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
+    #touch ${install_location}/.KUL_apps_install_containers_yes
 else
     echo "Already installed required docker containers"
 fi
@@ -861,6 +861,25 @@ EOT
     fi
 else
     echo "Already installed KUL_FWT"
+fi
+
+# Installation of our fork of Synb0
+if ! [ -d "${install_location}/Synb0-DISCO" ] 
+then
+    install_KUL_apps "Synb0-DISCO"
+    if [ $do_not_install -eq 0 ]; then
+        git clone https://github.com/Rad-dude/Synb0-DISCO.git
+        cat <<EOT >> ${KUL_apps_config}
+# adding SynbO-DISCO
+export PATH="${install_location}/Synb0-DISCO/data_processing:\$PATH"
+
+EOT
+        echo "echo -e \"\t Synbo-DISCO\t-\t\$(cd $KUL_apps_DIR/Synb0-DISCO; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+    else
+        echo "ok - you choose not to install Synb0-DISCO"
+    fi
+else
+    echo "Already installed Synb0-DISCO"
 fi
 
 
