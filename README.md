@@ -11,7 +11,8 @@ The script installs the latest stable versions of:
 - nvidia cuda 
 - mrtrix3 
 - FSL 
-- Docker 
+- Docker
+- synb0
 - Freesurfer 
 - ANTs 
 - dcm2niix 
