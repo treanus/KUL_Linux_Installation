@@ -12,7 +12,7 @@ The script installs the latest stable versions of:
 - mrtrix3 
 - FSL 
 - Docker
-- synb0
+- synb0-DISCO (own improved fork)
 - Freesurfer 
 - ANTs 
 - dcm2niix 
