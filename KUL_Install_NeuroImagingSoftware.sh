@@ -577,10 +577,6 @@ if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
         docker pull jenspetersen/hd-glio-auto
         echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
     fi
-    #echo "Installing synb0"
-    #docker pull hansencb/synb0
-    #echo "echo -e \"\t synb0\t\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
-    #touch ${install_location}/.KUL_apps_install_containers_yes
 else
     echo "Already installed required docker containers"
 fi
@@ -871,6 +867,13 @@ then
     install_KUL_apps "Synb0-DISCO"
     if [ $do_not_install -eq 0 ]; then
         git clone https://github.com/Rad-dude/Synb0-DISCO.git
+        conda create --name radsyndisco 
+        conda activate radsyndisco
+        pip install torch
+        pip install torchvision
+        pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
+        pip install 'nibabel==2.5.2'
+        conda deactivate
         cat <<EOT >> ${KUL_apps_config}
 # adding SynbO-DISCO
 export PATH="${install_location}/Synb0-DISCO/data_processing:\$PATH"
