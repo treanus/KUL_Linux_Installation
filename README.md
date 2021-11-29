@@ -31,6 +31,7 @@ The script installs the latest stable versions of:
 - Mevislab
 - Robex
 - Spinal Cord Toolbox
+- itk-snap
 
 ## Output of a terminal after installation
 
