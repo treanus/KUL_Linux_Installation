@@ -167,7 +167,8 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             libquadmath0 \
             libgtk2.0-0 \
             firefox \
-            python2.7 
+            python2.7 \
+            itksnap
 
         if [ $local_os -eq 2 ];then
             sudo apt -y install nautilus
@@ -234,7 +235,8 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
         brew install --cask osirix-quicklook
         brew install --cask quicklook-json
         brew install --cask quicklook-csv
-
+        brew install --cask itk-snap
+        
         echo -e "\n\n\n"
         echo "KUL_Install_NeuroImagingSoftware:"
         echo "Now:"
