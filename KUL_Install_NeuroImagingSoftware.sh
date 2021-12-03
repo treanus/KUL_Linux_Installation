@@ -354,7 +354,7 @@ fi
 if [ $local_os -eq 2 ]; then
     echo "Already installed cuda in win11"
 elif [ $local_os -eq 1 ]; then
-    if [ $install_cuda -eq 3 ]; then
+    if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
             wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
@@ -371,7 +371,7 @@ fi
 
 
 # Installation of Visual Studio Code
-if [ ! command -v code &> /dev/null ] && [ $local_os -gt 1 ]; then
+if ! [ command -v code &> /dev/null ] && [ $local_os -gt 1 ]; then
     wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
     sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
     sudo sh -c 'echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
