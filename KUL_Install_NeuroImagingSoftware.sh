@@ -363,6 +363,12 @@ elif [ $local_os -eq 3 ]; then
             sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
             sudo apt-get update
             sudo apt-get -y install cuda
+            cat <<EOT >> ${KUL_apps_config}
+# adding cuda_toolkit
+export PATH=/usr/local/cuda-11.5/bin\${PATH:+:\${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-11.5/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
+
+EOT
         fi
     else
         echo "Already installed cuda"
