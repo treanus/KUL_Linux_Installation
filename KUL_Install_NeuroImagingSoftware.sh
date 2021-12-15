@@ -854,7 +854,7 @@ then
     if [ $do_not_install -eq 0 ]; then
         git clone https://github.com/treanus/KUL_FWT.git
         cd KUL_FWT
-        git checkout dev_cshdp
+        git checkout dev
         cd ..
         cat <<EOT >> ${KUL_apps_config}
 # adding KUL_FWT
