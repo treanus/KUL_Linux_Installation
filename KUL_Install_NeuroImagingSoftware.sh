@@ -168,7 +168,9 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             libgtk2.0-0 \
             firefox \
             python2.7 \
-            itksnap
+            itksnap \
+            mmv \
+            numlockx
 
         if [ $local_os -eq 2 ];then
             sudo apt -y install nautilus
