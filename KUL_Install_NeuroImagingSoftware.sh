@@ -879,6 +879,7 @@ then
         git clone https://github.com/Rad-dude/Synb0-DISCO.git
         conda create --name radsyndisco 
         conda activate radsyndisco
+        sudo apt install python3-pip
         pip install torch
         pip install torchvision
         pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
