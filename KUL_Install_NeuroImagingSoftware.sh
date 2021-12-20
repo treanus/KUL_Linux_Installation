@@ -877,13 +877,16 @@ then
     install_KUL_apps "Synb0-DISCO"
     if [ $do_not_install -eq 0 ]; then
         git clone https://github.com/Rad-dude/Synb0-DISCO.git
-        conda create --name radsyndisco 
+        conda create --name radsyndisco python=3.8
         conda activate radsyndisco
-        sudo apt install python3-pip
-        pip install torch
-        pip install torchvision
-        pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
-        pip install 'nibabel==2.5.2'
+        #sudo apt install python3-pip
+        #pip install torch
+        #pip install torchvision
+        #pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
+        conda install astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
+        pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+        #pip install 'nibabel==2.5.2'
+        pip install nibabel scipy
         conda deactivate
         cat <<EOT >> ${KUL_apps_config}
 # adding SynbO-DISCO
