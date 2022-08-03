@@ -974,30 +974,31 @@ fi
 
 exit
 
-# Installation of Mevislab 3.4
+# Installation of Mevislab 3.5
 if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
-    install_KUL_apps "Mevislab 3.4"
+    install_KUL_apps "Mevislab 3.5"
     if [ $do_not_install -eq 0 ]; then
         if [ $local_os -eq 1 ]; then
-            ml_file="https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.2/Mac/X86-64/MeVisLabSDK3.4.2_x86-64.dmg"
+            
+            ml_file="https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.2/Mac/X86-64/MeVisLabSDK3.5.0_x86-64.dmg"
             wget $ml_file
             hdiutil mount $ml_file
             sudo cp -R /Volumes/MeVisLabSDK/MeVisLab.app /Applications
             hdiutil unmount /Volumes/MeVisLabSDK
             rm $ml_file
         else
-            wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.3/Linux/GCC7-64/MeVisLabSDK3.4.3_gcc7-64.bin
-            chmod u+x MeVisLabSDK3.4.3_gcc7-64.bin
+            wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.5.0/Linux/GCC9-64/MeVisLabSDK3.5.0_gcc9-64.bin
+            chmod u+x MeVisLabSDK3.5.0_gcc9-64.bin
             #mkdir MeVisLabSDK3.4 
-            ./MeVisLabSDK3.4.3_gcc7-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
-            rm MeVisLabSDK3.4.3_gcc7-64.bin
+            ./MeVisLabSDK3.5.0_gcc9-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
+            rm MeVisLabSDK3.5.0_gcc9-64.bin
         fi
         touch ${install_location}/.KUL_apps_installed_mevislab
     else
         echo "ok - you choose not to install Mevislab 3.4"
     fi
 else
-    echo "Already installed MevislabSDK3.4"
+    echo "Already installed MevislabSDK3.5"
 fi
 
 
