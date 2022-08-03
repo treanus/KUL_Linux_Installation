@@ -426,7 +426,6 @@ else
     echo "Already installed HD-BET"
 fi
 
-exit
 
 # Installation of MRtrix3
 if ! command -v mrconvert &> /dev/null; then
@@ -447,7 +446,7 @@ export PATH=${install_location}/mrtrix3/bin:\$PATH
 
 EOT
         # end cat command - see above
-        ${install_location}/KUL_apps/mrtrix/install_mime_types.sh
+        ${install_location}/KUL_apps/mrtrix3/install_mime_types.sh
     
         echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_apps_versions
     else
@@ -480,6 +479,41 @@ else
     echo "Already installed shard-recon"
 fi
 
+# Installation of FSL
+if ! command -v fslmaths &> /dev/null; then
+    install_KUL_apps "FSL"
+    if [ $do_not_install -eq 0 ]; then 
+        #if [ $local_os -eq 2 ]; then
+        #    sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
+        #fi
+        wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+        #if [ $local_os -gt 1 ]; then
+        #    sudo apt-get -y install python2.7
+        #fi
+        echo -e "\n\n\n"
+        echo "Here we give the installation instructions for FSL..."
+        echo "it is ok to install to the default /usr/local/fsl directory"
+        read -p "Press any key to continue... " -n1 -s
+        python fslinstaller.py
+        rm fslinstaller.py
+        cat <<EOT >> ${KUL_apps_config}
+# Installing FSL
+FSLDIR=/usr/local/fsl
+. \${FSLDIR}/etc/fslconf/fsl.sh
+PATH=\${FSLDIR}/bin:\${PATH}
+export FSLDIR PATH
+
+EOT
+        echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_apps_versions
+    else
+        echo "ok - you choose not to install FSL"
+    fi
+else
+    echo "Already installed FSL"
+fi
+
+exit
+
 # Installation of KUL_NIS (KULeuven Neuro Imaging Suite)
 if ! [ -d "${install_location}/KUL_NIS" ]; then
     install_KUL_apps "KUL_NIS"
@@ -506,6 +540,7 @@ else
     echo "Already installed KUL_NIS"
 fi
 
+exit
 
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
@@ -596,40 +631,6 @@ if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
     fi
 else
     echo "Already installed required docker containers"
-fi
-
-
-# Installation of FSL
-if ! command -v fslmaths &> /dev/null; then
-    install_KUL_apps "FSL"
-    if [ $do_not_install -eq 0 ]; then 
-        #if [ $local_os -eq 2 ]; then
-        #    sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
-        #fi
-        wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
-        #if [ $local_os -gt 1 ]; then
-        #    sudo apt-get -y install python2.7
-        #fi
-        echo -e "\n\n\n"
-        echo "Here we give the installation instructions for FSL..."
-        echo "it is ok to install to the default /usr/local/fsl directory"
-        read -p "Press any key to continue... " -n1 -s
-        sudo python2.7 fslinstaller.py
-        rm fslinstaller.py
-        cat <<EOT >> ${KUL_apps_config}
-# Installing FSL
-FSLDIR=/usr/local/fsl
-. \${FSLDIR}/etc/fslconf/fsl.sh
-PATH=\${FSLDIR}/bin:\${PATH}
-export FSLDIR PATH
-
-EOT
-        echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_apps_versions
-    else
-        echo "ok - you choose not to install FSL"
-    fi
-else
-    echo "Already installed FSL"
 fi
 
 
