@@ -175,7 +175,6 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             libgtk2.0-0 \
             firefox \
             python2.7 \
-            itksnap \
             mmv \
             numlockx
 
