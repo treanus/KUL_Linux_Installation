@@ -972,7 +972,6 @@ else
     echo "Already installed Karawun"
 fi
 
-exit
 
 # Installation of Mevislab 3.5
 if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
