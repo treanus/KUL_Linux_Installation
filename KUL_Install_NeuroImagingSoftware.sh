@@ -512,7 +512,6 @@ else
     echo "Already installed FSL"
 fi
 
-exit
 
 # Installation of KUL_NIS (KULeuven Neuro Imaging Suite)
 if ! [ -d "${install_location}/KUL_NIS" ]; then
@@ -540,7 +539,6 @@ else
     echo "Already installed KUL_NIS"
 fi
 
-exit
 
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
@@ -557,7 +555,7 @@ if ! command -v docker &> /dev/null; then
             newgrp docker
 
             # now for gpu capability
-            distribution=ubuntu20.04 \
+            distribution=ubuntu22.04 \
                 && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
                 && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
                 sudo tee /etc/apt/sources.list.d/nvidia-docker.list
@@ -573,6 +571,7 @@ else
     echo "Already installed Docker"
 fi
 
+exit
 
 # Installation of dcm2niix
 if ! command -v dcm2niix &> /dev/null; then
