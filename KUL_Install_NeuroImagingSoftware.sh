@@ -571,7 +571,6 @@ else
     echo "Already installed Docker"
 fi
 
-exit
 
 # Installation of dcm2niix
 if ! command -v dcm2niix &> /dev/null; then
@@ -973,6 +972,7 @@ else
     echo "Already installed Karawun"
 fi
 
+exit
 
 # Installation of Mevislab 3.4
 if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
