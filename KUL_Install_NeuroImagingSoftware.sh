@@ -3,7 +3,7 @@
 # This script installs many NeuroImaging software for use in 
 # MRI neuroimaging on Linux, WSL2 or macOS...
 # Stefan Sunaert - first version dd 08092020 - v0.1
-#  current version dd 01112021 - v0.6
+#  current version dd 03082022 - v0.8
 
 # ask each time to install a program
 if [ ! -z $1 ]; then
@@ -142,7 +142,15 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             libxi6 \
             libxtst6 \
             g++ \
+            freeglut3-dev \
+            build-essential \
+            libx11-dev \
             zlib1g-dev \
+            libxmu-dev \
+            libxi-dev \
+            libglu1-mesa \
+            libglu1-mesa-dev \
+            libfreeimage-dev \
             libeigen3-dev \
             libqt5opengl5-dev \
             libqt5svg5-dev \
@@ -160,7 +168,6 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             liblapack-dev \
             libopenblas0 \
             dc \
-            python \
             mesa-utils \
             gedit \
             pulseaudio \
@@ -280,7 +287,7 @@ if ! command -v conda &> /dev/null; then
             wget https://repo.anaconda.com/archive/${anaconda_version}
             sudo installer -pkg ${anaconda_version} -target ${install_location}
         else
-            anaconda_version=Anaconda3-2021.05-Linux-x86_64.sh
+            anaconda_version=Anaconda3-2022.05-Linux-x86_64.sh
             #sudo apt-get -y install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
             wget https://repo.anaconda.com/archive/${anaconda_version}
             echo -e "\n\n"
@@ -359,16 +366,16 @@ elif [ $local_os -eq 3 ]; then
     if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
-            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-            sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-            sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
-            sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+            sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
+            sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub
+            sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
             sudo apt-get update
             sudo apt-get -y install cuda
             cat <<EOT >> ${KUL_apps_config}
 # adding cuda_toolkit
-export PATH=/usr/local/cuda-11.5/bin\${PATH:+:\${PATH}}
-export LD_LIBRARY_PATH=/usr/local/cuda-11.5/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
+export PATH=/usr/local/cuda-11.7/bin\${PATH:+:\${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-11.7/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
 
 EOT
         fi
@@ -420,6 +427,7 @@ else
     echo "Already installed HD-BET"
 fi
 
+exit
 
 # Installation of MRtrix3
 if ! command -v mrconvert &> /dev/null; then
