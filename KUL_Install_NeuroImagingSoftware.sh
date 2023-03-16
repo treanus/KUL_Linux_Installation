@@ -446,7 +446,7 @@ export PATH=${install_location}/mrtrix3/bin:\$PATH
 
 EOT
         # end cat command - see above
-        ${install_location}/KUL_apps/mrtrix3/install_mime_types.sh
+        ${install_location}/mrtrix3/install_mime_types.sh
     
         echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_apps_versions
     else
