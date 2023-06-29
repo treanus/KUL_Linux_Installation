@@ -3,7 +3,7 @@
 # This script installs many NeuroImaging software for use in 
 # MRI neuroimaging on Linux, WSL2 or macOS...
 # Stefan Sunaert - first version dd 08092020 - v0.1
-#  current version dd 03082022 - v0.8
+#  current version dd 21062023 - v0.9
 
 # ask each time to install a program
 if [ ! -z $1 ]; then
@@ -173,10 +173,10 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             pulseaudio \
             libquadmath0 \
             libgtk2.0-0 \
-            firefox \
-            python2.7 \
             mmv \
-            numlockx
+            glances \
+            numlockx \
+            glibc-source
 
         if [ $local_os -eq 2 ];then
             sudo apt -y install nautilus
@@ -286,14 +286,14 @@ if ! command -v conda &> /dev/null; then
             wget https://repo.anaconda.com/archive/${anaconda_version}
             sudo installer -pkg ${anaconda_version} -target ${install_location}
         else
-            anaconda_version=Anaconda3-2022.05-Linux-x86_64.sh
+            anaconda_version=Anaconda3-2023.03-1-Linux-x86_64.sh
             #sudo apt-get -y install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
             wget https://repo.anaconda.com/archive/${anaconda_version}
             echo -e "\n\n"
             echo "Here we give the installation instructions for anaconda..."
             echo "ACCEPT THE LICENSE"
             echo "INSTALL DIRECTORY = /usr/local/KUL_apps/anaconda3"
-            echo "Say no NO initialize Anaconda3"
+            echo "Say NO initialize Anaconda3"
             read -p "Press any key to continue... " -n1 -s
             bash ${anaconda_version} -p ${install_location}/anaconda3
             echo "" >> ${KUL_apps_config}
@@ -303,14 +303,14 @@ if ! command -v conda &> /dev/null; then
             cat <<EOT >> ${KUL_apps_config}
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="\$('/usr/local/KUL_apps/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+__conda_setup="$('/usr/local/KUL_apps/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
-    eval "\$__conda_setup"
+    eval "$__conda_setup"
 else
     if [ -f "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh" ]; then
         . "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh"
     else
-        export PATH="/usr/local/KUL_apps/anaconda3/bin:$PATH"
+        export PATH="/usr/local/KUL_apps/anaconda3/bin:\$PATH"
     fi
 fi
 unset __conda_setup
@@ -365,16 +365,18 @@ elif [ $local_os -eq 3 ]; then
     if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
-            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
-            sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
-            sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub
-            sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
+            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+            sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+            wget https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda-repo-ubuntu2004-12-1-local_12.1.1-530.30.02-1_amd64.deb
+            sudo dpkg -i cuda-repo-ubuntu2004-12-1-local_12.1.1-530.30.02-1_amd64.deb
+            sudo cp /var/cuda-repo-ubuntu2004-12-1-local/cuda-*-keyring.gpg /usr/share/keyrings/
             sudo apt-get update
             sudo apt-get -y install cuda
+
             cat <<EOT >> ${KUL_apps_config}
 # adding cuda_toolkit
-export PATH=/usr/local/cuda-11.7/bin\${PATH:+:\${PATH}}
-export LD_LIBRARY_PATH=/usr/local/cuda-11.7/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
+export PATH=/usr/local/cuda-12.1/bin\${PATH:+:\${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
 
 EOT
         fi
@@ -384,6 +386,7 @@ EOT
 elif [ $local_os -eq 1 ]; then
     echo "Not installing cuda on macOS (no nvidia cards available)"
 fi
+
 
 
 # Installation of Visual Studio Code
@@ -398,6 +401,10 @@ if ! [ command -v code &> /dev/null ] && [ $local_os -gt 1 ]; then
 else
     echo "Already installed Visual Studio Code"
 fi
+
+# Install pytorch
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
 
 
 # Installation of HD-BET
@@ -496,12 +503,12 @@ if ! command -v fslmaths &> /dev/null; then
         read -p "Press any key to continue... " -n1 -s
         python fslinstaller.py
         rm fslinstaller.py
-        cat <<EOT >> ${KUL_apps_config}
+         cat <<EOT >> ${KUL_apps_config}
 # Installing FSL
 FSLDIR=/usr/local/fsl
-. \${FSLDIR}/etc/fslconf/fsl.sh
-PATH=\${FSLDIR}/bin:\${PATH}
+PATH=\${FSLDIR}/share/fsl/bin:\${PATH}
 export FSLDIR PATH
+. \${FSLDIR}/etc/fslconf/fsl.sh
 
 EOT
         echo "echo -e \"\t FSL\t\t-\t\$(cat \$FSLDIR/etc/fslversion)\"" >> $KUL_apps_versions
@@ -511,6 +518,7 @@ EOT
 else
     echo "Already installed FSL"
 fi
+
 
 
 # Installation of KUL_NIS (KULeuven Neuro Imaging Suite)
@@ -555,7 +563,7 @@ if ! command -v docker &> /dev/null; then
             newgrp docker
 
             # now for gpu capability
-            distribution=ubuntu22.04 \
+            distribution=ubuntu20.04 \
                 && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
                 && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
                 sudo tee /etc/apt/sources.list.d/nvidia-docker.list
@@ -570,6 +578,7 @@ if ! command -v docker &> /dev/null; then
 else
     echo "Already installed Docker"
 fi
+
 
 
 # Installation of dcm2niix
@@ -599,7 +608,7 @@ fi
 if ! command -v dcm2bids &> /dev/null; then
     install_KUL_apps "dcm2bids"
     if [ $do_not_install -eq 0 ]; then
-        pip install dcm2bids
+        conda install -y -c conda-forge dcm2bids
         echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_apps_versions 
     else
         echo "ok - you choose not to install dcm2bids"
@@ -678,6 +687,7 @@ EOT
 else
     echo "Already installed Freesurfer ${freesurfer_version}"
 fi
+
 
 
 # Installation of Ants
@@ -819,7 +829,7 @@ fi
 
 
 # Installation of CONN
-conn_version="con20b"
+conn_version="con22a"
 if ! [ -d "${install_location}/${conn_version}" ]; then
     install_KUL_apps "conn-toolbox version ${conn_version}"
     if [ $do_not_install -eq 0 ]; then
@@ -890,7 +900,7 @@ then
         #pip install torchvision
         #pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
         conda install astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
-        pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+        #pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
         #pip install 'nibabel==2.5.2'
         pip install nibabel scipy
         conda deactivate
@@ -942,7 +952,7 @@ EOT
         source ${install_location}/KUL_apps_config
         # install Pytorch
         # conda install -y  pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
-        pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+        #pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
         echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install FastSurfer"
@@ -973,24 +983,25 @@ else
 fi
 
 
-# Installation of Mevislab 3.5
+# Installation of Mevislab 3.7
 if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
-    install_KUL_apps "Mevislab 3.5"
+    install_KUL_apps "Mevislab 3.7"
     if [ $do_not_install -eq 0 ]; then
         if [ $local_os -eq 1 ]; then
             
-            ml_file="https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.2/Mac/X86-64/MeVisLabSDK3.5.0_x86-64.dmg"
+            ml_file="https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.2/Mac/X86-64/MeVisLabSDK3.4.2_x86-64.dm"
             wget $ml_file
             hdiutil mount $ml_file
             sudo cp -R /Volumes/MeVisLabSDK/MeVisLab.app /Applications
             hdiutil unmount /Volumes/MeVisLabSDK
             rm $ml_file
         else
-            wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.5.0/Linux/GCC9-64/MeVisLabSDK3.5.0_gcc9-64.bin
-            chmod u+x MeVisLabSDK3.5.0_gcc9-64.bin
+            sudo apt-get install libxcb-xinput0 libxcb-xinerama0
+            wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.7.0/Linux/GCC11-64/MeVisLabSDK3.7.0_gcc11-64.bin
+            chmod u+x MeVisLabSDK3.7.0_gcc11-64.bin
             #mkdir MeVisLabSDK3.4 
-            ./MeVisLabSDK3.5.0_gcc9-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
-            rm MeVisLabSDK3.5.0_gcc9-64.bin
+            ./MeVisLabSDK3.7.0_gcc11-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
+            rm MeVisLabSDK3.7.0_gcc11-64.bin
         fi
         touch ${install_location}/.KUL_apps_installed_mevislab
     else
@@ -999,6 +1010,7 @@ if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
 else
     echo "Already installed MevislabSDK3.5"
 fi
+
 
 
 # Installation of Robex
