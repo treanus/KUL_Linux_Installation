@@ -183,7 +183,6 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             htop \
             build-essential \
             mmv \
-            glances \
             numlockx \
             g++ \
             libeigen3-dev \
@@ -191,7 +190,8 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
             libfftw3-dev libtiff5-dev libpng-dev \
             cmake pkg-config \
             nvtop \
-            tcsh
+            tcsh \
+            imagemagick
 
 
         if [ $local_os -eq 2 ];then
@@ -373,6 +373,8 @@ else
     echo "Already set up useful aliases"
 fi
 
+# adding some more
+pip install py3nvml glances
 
 # install cuda toolkit
 if [ $local_os -eq 2 ]; then
@@ -389,7 +391,7 @@ elif [ $local_os -eq 3 ]; then
             cat <<EOT >> ${KUL_apps_config}
 # adding cuda_toolkit
 export PATH=/usr/local/cuda/bin\${PATH:+:\${PATH}}
-export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}
 
 EOT
         fi
@@ -956,9 +958,13 @@ if ! command -v scil_filter_tractogram.py &> /dev/null; then
         #if [ $local_os -gt 1 ]; then
         #    sudo apt-get -y install libblas-dev liblapack-dev
         #fi
+        sudo apt install libblas-dev liblapack-dev libfreetype6-dev
         git clone https://github.com/scilus/scilpy.git
         cd scilpy
+        conda create --name scilpy python=3.10
+        conda activate scilpy
         pip install -e .
+        conda deactivate
         echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install Scilpy"
