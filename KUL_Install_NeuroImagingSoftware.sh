@@ -129,54 +129,70 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
         sleep 4
         sudo apt update
         sudo apt upgrade
+        # sudo apt -y install \
+        #     git \
+        #     htop \
+        #     libgl1-mesa-glx \
+        #     libegl1-mesa \
+        #     libxrandr2 \
+        #     libxss1 \
+        #     libxcursor1 \
+        #     libxcomposite1 \
+        #     libasound2 \
+        #     libxi6 \
+        #     libxtst6 \
+        #     g++ \
+        #     freeglut3-dev \
+        #     build-essential \
+        #     libx11-dev \
+        #     zlib1g-dev \
+        #     libxmu-dev \
+        #     libxi-dev \
+        #     libglu1-mesa \
+        #     libglu1-mesa-dev \
+        #     libfreeimage-dev \
+        #     libeigen3-dev \
+        #     libqt5opengl5-dev \
+        #     libqt5svg5-dev \
+        #     libgl1-mesa-dev \
+        #     libfftw3-dev \
+        #     libtiff5-dev \
+        #     libpng-dev \
+        #     python3-distutils \
+        #     tcsh \
+        #     cmake \
+        #     pkg-config \
+        #     libncurses5-dev \
+        #     libncursesw5-dev \
+        #     libblas-dev \
+        #     liblapack-dev \
+        #     libopenblas0 \
+        #     dc \
+        #     mesa-utils \
+        #     gedit \
+        #     pulseaudio \
+        #     libquadmath0 \
+        #     libgtk2.0-0 \
+        #     mmv \
+        #     glances \
+        #     numlockx \
+        #     glibc-source
+
         sudo apt -y install \
             git \
             htop \
-            libgl1-mesa-glx \
-            libegl1-mesa \
-            libxrandr2 \
-            libxss1 \
-            libxcursor1 \
-            libxcomposite1 \
-            libasound2 \
-            libxi6 \
-            libxtst6 \
-            g++ \
-            freeglut3-dev \
             build-essential \
-            libx11-dev \
-            zlib1g-dev \
-            libxmu-dev \
-            libxi-dev \
-            libglu1-mesa \
-            libglu1-mesa-dev \
-            libfreeimage-dev \
-            libeigen3-dev \
-            libqt5opengl5-dev \
-            libqt5svg5-dev \
-            libgl1-mesa-dev \
-            libfftw3-dev \
-            libtiff5-dev \
-            libpng-dev \
-            python3-distutils \
-            tcsh \
-            cmake \
-            pkg-config \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libblas-dev \
-            liblapack-dev \
-            libopenblas0 \
-            dc \
-            mesa-utils \
-            gedit \
-            pulseaudio \
-            libquadmath0 \
-            libgtk2.0-0 \
             mmv \
             glances \
             numlockx \
-            glibc-source
+            g++ \
+            libeigen3-dev \
+            zlib1g-dev libqt5opengl5-dev libqt5svg5-dev libgl1-mesa-dev \
+            libfftw3-dev libtiff5-dev libpng-dev \
+            cmake pkg-config \
+            nvtop \
+            tcsh
+
 
         if [ $local_os -eq 2 ];then
             sudo apt -y install nautilus
@@ -303,9 +319,9 @@ if ! command -v conda &> /dev/null; then
             cat <<EOT >> ${KUL_apps_config}
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/usr/local/KUL_apps/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
+__conda_setup="\$('/usr/local/KUL_apps/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ \$? -eq 0 ]; then
+    eval "\$__conda_setup"
 else
     if [ -f "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh" ]; then
         . "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh"
@@ -365,18 +381,15 @@ elif [ $local_os -eq 3 ]; then
     if [ $install_cuda -eq 1 ]; then
         if ! command -v nvcc &> /dev/null
         then
-            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-            sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-            wget https://developer.download.nvidia.com/compute/cuda/12.1.1/local_installers/cuda-repo-ubuntu2004-12-1-local_12.1.1-530.30.02-1_amd64.deb
-            sudo dpkg -i cuda-repo-ubuntu2004-12-1-local_12.1.1-530.30.02-1_amd64.deb
-            sudo cp /var/cuda-repo-ubuntu2004-12-1-local/cuda-*-keyring.gpg /usr/share/keyrings/
+            wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+            sudo dpkg -i cuda-keyring_1.1-1_all.deb
             sudo apt-get update
             sudo apt-get -y install cuda
-
+            
             cat <<EOT >> ${KUL_apps_config}
 # adding cuda_toolkit
-export PATH=/usr/local/cuda-12.1/bin\${PATH:+:\${PATH}}
-export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
+export PATH=/usr/local/cuda/bin\${PATH:+:\${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
 
 EOT
         fi
@@ -402,9 +415,14 @@ else
     echo "Already installed Visual Studio Code"
 fi
 
-# Install pytorch
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
+# Install pytorch
+if ! command -v torchrun &> /dev/null
+then
+    conda install -y pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+else
+    echo "Already installed pytorch"
+fi    
 
 
 # Installation of HD-BET
@@ -438,8 +456,15 @@ fi
 if ! command -v mrconvert &> /dev/null; then
     install_KUL_apps "MRtrix3"
     if [ $do_not_install -eq 0 ]; then 
+        echo "KUL_apps: which version do you want to install"
+        echo "  1 - stable"
+        echo "  2 - development"
+        read -r -p "MRtrix3 version: [1/2] " mrtrix3_prompt     
         git clone https://github.com/MRtrix3/mrtrix3.git
         cd mrtrix3 
+        if [[ $mrtrix3_prompt == "2" ]]; then
+            git checkout dev
+        fi
         if [ $local_os -eq 1 ];then
             ./configure -conda
         else
@@ -462,6 +487,7 @@ EOT
 else
     echo "Already installed MRtrix3"
 fi
+
 
 # Installation of shard-recon
 if ! command -v dwimotioncorrect &> /dev/null; then
@@ -486,6 +512,7 @@ else
     echo "Already installed shard-recon"
 fi
 
+
 # Installation of FSL
 if ! command -v fslmaths &> /dev/null; then
     install_KUL_apps "FSL"
@@ -493,7 +520,7 @@ if ! command -v fslmaths &> /dev/null; then
         #if [ $local_os -eq 2 ]; then
         #    sudo apt-get -y install dc python mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox
         #fi
-        wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+        wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py
         #if [ $local_os -gt 1 ]; then
         #    sudo apt-get -y install python2.7
         #fi
@@ -501,9 +528,10 @@ if ! command -v fslmaths &> /dev/null; then
         echo "Here we give the installation instructions for FSL..."
         echo "it is ok to install to the default /usr/local/fsl directory"
         read -p "Press any key to continue... " -n1 -s
-        python fslinstaller.py
+        exit
+        python fslinstaller.py -d /usr/local/fsl -s
         rm fslinstaller.py
-         cat <<EOT >> ${KUL_apps_config}
+        cat <<EOT >> ${KUL_apps_config}
 # Installing FSL
 FSLDIR=/usr/local/fsl
 PATH=\${FSLDIR}/share/fsl/bin:\${PATH}
@@ -526,13 +554,13 @@ if ! [ -d "${install_location}/KUL_NIS" ]; then
     install_KUL_apps "KUL_NIS"
     if [ $do_not_install -eq 0 ]; then
         git clone https://github.com/treanus/KUL_NIS.git
-        if [ $local_os -gt 1 ]; then
+        #if [ $local_os -gt 1 ]; then
             #sudo apt-get install libopenblas0
-            cp KUL_NIS/share/eddy_cuda11.2_linux.tar.gz .
-            tar -xzvf eddy_cuda11.2_linux.tar.gz
-            rm eddy_cuda11.2_linux.tar.gz
-            sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
-        fi
+            #cp KUL_NIS/share/eddy_cuda11.2_linux.tar.gz .
+            #tar -xzvf eddy_cuda11.2_linux.tar.gz
+            #rm eddy_cuda11.2_linux.tar.gz
+            #sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
+        #fi
         cat <<EOT >> ${KUL_apps_config}
 # adding KUL_NIS (KULeuven Neuro Imaging Suite)
 export PATH=${install_location}/KUL_NIS:\$PATH
@@ -548,13 +576,15 @@ else
 fi
 
 
+
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
     if [ $local_os -gt 1 ]; then
         install_KUL_apps "Docker"
         if [ $do_not_install -eq 0 ]; then 
+            for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+            #sudo apt-get -y remove docker docker-engine docker.io
             sudo apt-get -y update
-            sudo apt-get -y remove docker docker-engine docker.io
             sudo apt-get -y install docker.io
             sudo systemctl start docker
             sudo systemctl enable docker
@@ -563,10 +593,10 @@ if ! command -v docker &> /dev/null; then
             newgrp docker
 
             # now for gpu capability
-            distribution=ubuntu20.04 \
-                && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
-                && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
-                sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+            #distribution=ubuntu22.04 \
+            #    && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
+            #    && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
+            #    sudo tee /etc/apt/sources.list.d/nvidia-docker.list
             sudo apt-get update
             sudo apt-get install -y nvidia-docker2
             sudo systemctl restart docker
@@ -641,18 +671,19 @@ else
 fi
 
 
+
 # Installation of Freesurfer
 if ! command -v freeview &> /dev/null; then
     echo "KUL_apps: which version do you want to install"
     echo "  1 - v6.0.0 (recommended)"
-    echo "  2 - v7.2.0"
+    echo "  2 - v7.4.1"
     read -r -p "Freesurfer version: [1/2] " fs_prompt
     if [[ $fs_prompt == "2" ]]; then
-       freesurfer_version="7.2.0"
+       freesurfer_version="7.4.1"
        if [ $local_os -eq 1 ]; then
-            freesurfer_file="freesurfer-darwin-macOS-7.2.0"
+            freesurfer_file="freesurfer-macOS-darwin_x86_64-7.4.1"
         else
-            freesurfer_file="freesurfer-linux-ubuntu18_amd64-7.2.0"
+            freesurfer_file="freesurfer-linux-ubuntu22_amd64-7.4.1"
         fi
     else
         freesurfer_version="6.0.0"
@@ -950,9 +981,6 @@ export PATH=\$FASTSURFER_HOME/recon_surf:\$PATH
 
 EOT
         source ${install_location}/KUL_apps_config
-        # install Pytorch
-        # conda install -y  pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
-        #pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
         echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install FastSurfer"
@@ -967,13 +995,14 @@ fi
 if ! [ -f "${install_location}/.KUL_apps_installed_karawun" ]; then
     install_KUL_apps "Karawun"
     if [ $do_not_install -eq 0 ]; then
-        sudo chown -R "$(id -u):$(id -g)" $HOME/.conda
+        #sudo chown -R "$(id -u):$(id -g)" $HOME/.conda
         conda config --append channels conda-forge --append channels anaconda --append channels SimpleITK
-        conda install -y  git
-        conda create --name KarawunEnv --file https://github.com/DevelopmentalImagingMCRI/karawun/raw/master/requirements.txt
-        conda activate KarawunEnv
-        pip install git+https://github.com/DevelopmentalImagingMCRI/karawun.git@master
-        conda deactivate
+        conda create --name KarawunEnv python=3.8 karawun
+        #conda install -y  git
+        #conda create --name KarawunEnv --file https://github.com/DevelopmentalImagingMCRI/karawun/raw/master/requirements.txt
+        #conda activate KarawunEnv
+        #pip install git+https://github.com/DevelopmentalImagingMCRI/karawun.git@master
+        #conda deactivate
         touch ${install_location}/.KUL_apps_installed_karawun
     else
         echo "ok - you choose not to install Karawun"
@@ -999,13 +1028,13 @@ if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
             sudo apt-get install libxcb-xinput0 libxcb-xinerama0
             wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.7.0/Linux/GCC11-64/MeVisLabSDK3.7.0_gcc11-64.bin
             chmod u+x MeVisLabSDK3.7.0_gcc11-64.bin
-            #mkdir MeVisLabSDK3.4 
-            ./MeVisLabSDK3.7.0_gcc11-64.bin --prefix ${install_location}/MevislabSDK3.4 --mode silent
+            mkdir MeVisLabSDK3.7
+            ./MeVisLabSDK3.7.0_gcc11-64.bin --prefix ${install_location}/MevislabSDK3.7 --mode silent
             rm MeVisLabSDK3.7.0_gcc11-64.bin
         fi
         touch ${install_location}/.KUL_apps_installed_mevislab
     else
-        echo "ok - you choose not to install Mevislab 3.4"
+        echo "ok - you choose not to install Mevislab 3.7"
     fi
 else
     echo "Already installed MevislabSDK3.5"
@@ -1048,30 +1077,6 @@ if ! [ -d "${install_location}/${program}" ]; then
     fi
 else
     echo "Already installed ${program}"
-fi
-
-
-# Installation of nvtop
-if ! command -v nvtop &> /dev/null; then
-    if [ $local_os -gt 1 ]; then
-        install_KUL_apps "nvtop"
-        if [ $do_not_install -eq 0 ]; then
-            #sudo apt install cmake libncurses5-dev libncursesw5-dev
-            git clone https://github.com/Syllo/nvtop.git
-            mkdir -p nvtop/build && cd nvtop/build
-            cmake ..
-            make
-            sudo make install
-            cd ../..
-            rm -fr nvtop
-        else
-            echo "ok - you choose not to install nvtop"
-        fi
-    elif [ $local_os -eq 1 ]; then
-        echo "Not installing nvtop on macOS"
-    fi
-else
-    echo "Already installed nvtop"
 fi
 
 
