@@ -3,7 +3,7 @@
 # This script installs many NeuroImaging software for use in 
 # MRI neuroimaging on Linux, WSL2 or macOS...
 # Stefan Sunaert - first version dd 08092020 - v0.1
-#  current version dd 21072023 - v0.91
+#  current version dd 21062023 - v0.9
 
 # ask each time to install a program
 if [ ! -z $1 ]; then
@@ -292,6 +292,68 @@ EOT
     sleep 4
 fi
 
+
+# Installation of Anaconda --- BEGIN
+if ! command -v conda &> /dev/null; then
+    install_KUL_apps "Anaconda3"
+    if [ $do_not_install -eq 0 ]; then 
+        if [ $local_os -eq 1 ]; then
+            anaconda_version=Anaconda3-2021.05-MacOSX-x86_64.pkg
+            wget https://repo.anaconda.com/archive/${anaconda_version}
+            sudo installer -pkg ${anaconda_version} -target ${install_location}
+        else
+            anaconda_version=Anaconda3-2023.03-1-Linux-x86_64.sh
+            #sudo apt-get -y install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+            wget https://repo.anaconda.com/archive/${anaconda_version}
+            echo -e "\n\n"
+            echo "Here we give the installation instructions for anaconda..."
+            echo "ACCEPT THE LICENSE"
+            echo "INSTALL DIRECTORY = /usr/local/KUL_apps/anaconda3"
+            echo "Say NO initialize Anaconda3"
+            read -p "Press any key to continue... " -n1 -s
+            bash ${anaconda_version} -p ${install_location}/anaconda3
+            echo "" >> ${KUL_apps_config}
+            echo "# load Anaconda3"
+
+            # begin cat command - see below
+            cat <<EOT >> ${KUL_apps_config}
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="\$('/usr/local/KUL_apps/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ \$? -eq 0 ]; then
+    eval "\$__conda_setup"
+else
+    if [ -f "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/usr/local/KUL_apps/anaconda3/bin:\$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+EOT
+            # end cat command - see above
+
+        fi
+
+        rm ${anaconda_version}
+        echo "echo -e \"\t Anaconda3\t-\t${anaconda_version}" \" >> $KUL_apps_versions
+        echo -e "\n\n\n"
+        echo "Now exit all ${os_name} terminals and run the KNT_Linux_install.sh again from a new terminal"
+        
+        exit
+
+    else
+        echo "Ananconda is really essential - don't know what to do but exit"
+        exit
+    fi
+else
+    echo "Already installed Anaconda3"
+fi
+# Installation of Anaconda --- END
+
+
 # Setup some useful stuff
 if ! [ -f "${install_location}/.KUL_apps_useful_installed" ]
 then
@@ -311,6 +373,8 @@ else
     echo "Already set up useful aliases"
 fi
 
+# adding some more
+pip install py3nvml glances
 
 # install cuda toolkit
 if [ $local_os -eq 2 ]; then
@@ -339,6 +403,7 @@ elif [ $local_os -eq 1 ]; then
 fi
 
 
+
 # Installation of Visual Studio Code
 if ! [ command -v code &> /dev/null ] && [ $local_os -gt 1 ]; then
     wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
@@ -350,6 +415,103 @@ if ! [ command -v code &> /dev/null ] && [ $local_os -gt 1 ]; then
     rm packages.microsoft.gpg
 else
     echo "Already installed Visual Studio Code"
+fi
+
+
+# Install pytorch
+if ! command -v torchrun &> /dev/null
+then
+    conda install -y pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+else
+    echo "Already installed pytorch"
+fi    
+
+
+# Installation of HD-BET
+if ! command -v hd-bet &> /dev/null
+then
+    install_KUL_apps "HD-BET"
+    if [ $do_not_install -eq 0 ]; then 
+        git clone https://github.com/MIC-DKFZ/HD-BET
+        cd HD-BET
+        if [ $local_os -eq 1 ]; then
+            sudo pip install -e . # sudo needed for macOS, yes
+        else
+            pip install -e . # ??? sudo needed for macOS, check if needed for Linux/WSL2 next time
+        fi
+        cd
+        echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+        if [ $local_os -eq 1 ]; then
+            echo "" >> ${KUL_apps_config}
+            echo "# Setting up HD-BET" >> ${KUL_apps_config}
+            echo "alias hd-bet='hd-bet -device cpu -mode fast -tta 0 ' " >> ${KUL_apps_config}
+        fi
+    else
+        echo "ok - you choose not to install HD-BET"
+    fi
+else
+    echo "Already installed HD-BET"
+fi
+
+
+# Installation of MRtrix3
+if ! command -v mrconvert &> /dev/null; then
+    install_KUL_apps "MRtrix3"
+    if [ $do_not_install -eq 0 ]; then 
+        echo "KUL_apps: which version do you want to install"
+        echo "  1 - stable"
+        echo "  2 - development"
+        read -r -p "MRtrix3 version: [1/2] " mrtrix3_prompt     
+        git clone https://github.com/MRtrix3/mrtrix3.git
+        cd mrtrix3 
+        if [[ $mrtrix3_prompt == "2" ]]; then
+            git checkout dev
+        fi
+        if [ $local_os -eq 1 ];then
+            ./configure -conda
+        else
+            ./configure
+        fi
+        ./build
+        # begin cat command - see below
+        cat <<EOT >> ${KUL_apps_config}
+# adding MRTRIX3
+export PATH=${install_location}/mrtrix3/bin:\$PATH
+
+EOT
+        # end cat command - see above
+        ${install_location}/mrtrix3/install_mime_types.sh
+    
+        echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_apps_versions
+    else
+        echo "ok - you choose not to install MRtrix3"
+    fi
+else
+    echo "Already installed MRtrix3"
+fi
+
+
+# Installation of shard-recon
+if ! command -v dwimotioncorrect &> /dev/null; then
+    install_KUL_apps "shard-recon"
+    if [ $do_not_install -eq 0 ]; then 
+        git clone https://github.com/dchristiaens/shard-recon.git
+        cd shard-recon
+        ln -s ${install_location}/mrtrix3/build
+        ln -s ${install_location}/mrtrix3/bin/mrtrix3.py bin/
+        ./build
+        # begin cat command - see below
+        cat <<EOT >> ${KUL_apps_config}
+# adding shard-recon
+export PATH=${install_location}/shard-recon/bin:\$PATH
+
+EOT
+
+    else
+        echo "ok - you choose not to install shard-recon"
+    fi
+else
+    echo "Already installed shard-recon"
 fi
 
 
@@ -369,7 +531,7 @@ if ! command -v fslmaths &> /dev/null; then
         echo "it is ok to install to the default /usr/local/fsl directory"
         read -p "Press any key to continue... " -n1 -s
         exit
-        python3 fslinstaller.py -d /usr/local/fsl -s
+        python fslinstaller.py -d /usr/local/fsl -s
         rm fslinstaller.py
         cat <<EOT >> ${KUL_apps_config}
 # Installing FSL
@@ -388,26 +550,142 @@ else
 fi
 
 
+
+# Installation of KUL_NIS (KULeuven Neuro Imaging Suite)
+if ! [ -d "${install_location}/KUL_NIS" ]; then
+    install_KUL_apps "KUL_NIS"
+    if [ $do_not_install -eq 0 ]; then
+        git clone https://github.com/treanus/KUL_NIS.git
+        #if [ $local_os -gt 1 ]; then
+            #sudo apt-get install libopenblas0
+            #cp KUL_NIS/share/eddy_cuda11.2_linux.tar.gz .
+            #tar -xzvf eddy_cuda11.2_linux.tar.gz
+            #rm eddy_cuda11.2_linux.tar.gz
+            #sudo ln -s ${install_location}/eddy_cuda/eddy_cuda11.2 /usr/local/fsl/bin/eddy_cuda
+        #fi
+        cat <<EOT >> ${KUL_apps_config}
+# adding KUL_NIS (KULeuven Neuro Imaging Suite)
+export PATH=${install_location}/KUL_NIS:\$PATH
+export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
+
+EOT
+        echo "echo -e \"\t KUL_NIS\t-\t\$(cd $KUL_apps_DIR/KUL_NIS; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+    else
+        echo "ok - you choose not to install KUL_NIS"
+    fi
+else
+    echo "Already installed KUL_NIS"
+fi
+
+
+
+# Installation of Docker
+if ! command -v docker &> /dev/null; then
+    if [ $local_os -gt 1 ]; then
+        install_KUL_apps "Docker"
+        if [ $do_not_install -eq 0 ]; then 
+            for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+            #sudo apt-get -y remove docker docker-engine docker.io
+            sudo apt-get -y update
+            sudo apt-get -y install docker.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo groupadd docker
+            sudo usermod -aG docker $USER
+            newgrp docker
+
+            # now for gpu capability
+            #distribution=ubuntu22.04 \
+            #    && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
+            #    && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
+            #    sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+            sudo apt-get update
+            sudo apt-get install -y nvidia-docker2
+            sudo systemctl restart docker
+            
+        else
+            echo "ok - you choose not to install Docker - it is essential though in most cases..."
+        fi
+    fi
+else
+    echo "Already installed Docker"
+fi
+
+
+
+# Installation of dcm2niix
+if ! command -v dcm2niix &> /dev/null; then
+    install_KUL_apps "dcm2niix"
+    if [ $do_not_install -eq 0 ]; then
+        git clone https://github.com/rordenlab/dcm2niix.git
+        cd dcm2niix
+        mkdir build && cd build
+        cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
+        make
+        cat <<EOT >> ${KUL_apps_config}
+# adding dcm2nixx
+export PATH=${install_location}/dcm2niix/build/bin:\$PATH
+
+EOT
+        echo "echo -e \"\t dcm2nixx\t-\t\$(dcm2niix --version | head -1 | awk '{ print \$5 }') \"" >> $KUL_apps_versions 
+    else
+        echo "ok - you choose not to install dcm2niix"
+    fi
+else
+    echo "Already installed dcm2niix"
+fi
+
+
+# Installation of dcm2bids
+if ! command -v dcm2bids &> /dev/null; then
+    install_KUL_apps "dcm2bids"
+    if [ $do_not_install -eq 0 ]; then
+        conda install -y -c conda-forge dcm2bids
+        echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_apps_versions 
+    else
+        echo "ok - you choose not to install dcm2bids"
+    fi
+else
+    echo "Already installed dcm2bids"
+fi
+
+
+# lets's make install current
+source ${bashfile}
+
+# download a number of Docker containers
+if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
+    echo "Now installing some useful docker containers"
+    sleep 3
+    if [ $local_os -eq 1 ]; then
+        echo -e "\n\n\n"
+        echo "Here we give the installation instructions for docker containers on macOS..."
+        echo "See to it that Docker Desktop is setup and running"
+        read -p "Press any key to continue... " -n1 -s
+        echo "Not installing hd-glio-auto on macOS (no compatible GPU)"
+        echo "echo -e \"\t hd-glio-auto\t-\tcannot be installed (no compatible GPU) \"" >> $KUL_apps_versions
+    else
+        docker pull jenspetersen/hd-glio-auto
+        echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
+    fi
+else
+    echo "Already installed required docker containers"
+fi
+
+
+
 # Installation of Freesurfer
 if ! command -v freeview &> /dev/null; then
     echo "KUL_apps: which version do you want to install"
-    echo "  1 - v6.0.0"
-    echo "  2 - v7.2.0"
-    echo "  3 - v7.4.1"
-    read -r -p "Freesurfer version: [1/2/3] " fs_prompt
-    if [[ $fs_prompt == "3" ]]; then
+    echo "  1 - v6.0.0 (recommended)"
+    echo "  2 - v7.4.1"
+    read -r -p "Freesurfer version: [1/2] " fs_prompt
+    if [[ $fs_prompt == "2" ]]; then
        freesurfer_version="7.4.1"
        if [ $local_os -eq 1 ]; then
             freesurfer_file="freesurfer-macOS-darwin_x86_64-7.4.1"
         else
             freesurfer_file="freesurfer-linux-ubuntu22_amd64-7.4.1"
-        fi
-    elif [[ $fs_prompt == "2" ]]; then
-       freesurfer_version="7.2.0"
-       if [ $local_os -eq 1 ]; then
-            freesurfer_file="freesurfer-macOS-darwin_x86_64-7.2.0"
-        else
-            freesurfer_file="freesurfer-linux-ubuntu18_amd64-7.2.0"
         fi
     else
         freesurfer_version="6.0.0"
@@ -443,101 +721,6 @@ else
     echo "Already installed Freesurfer ${freesurfer_version}"
 fi
 
-
-# Installation of Docker
-if ! command -v docker &> /dev/null; then
-    if [ $local_os -gt 1 ]; then
-        install_KUL_apps "Docker"
-        if [ $do_not_install -eq 0 ]; then 
-            for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
-            #sudo apt-get -y remove docker docker-engine docker.io
-            sudo apt-get -y update
-            sudo apt-get -y install docker.io
-            sudo systemctl start docker
-            sudo systemctl enable docker
-            sudo groupadd docker
-            sudo usermod -aG docker $USER
-            newgrp docker
-
-            # now for gpu capability
-            sudo apt-get update
-            sudo apt-get install -y nvidia-docker2
-            sudo systemctl restart docker
-            
-        else
-            echo "ok - you choose not to install Docker - it is essential though in most cases..."
-        fi
-    fi
-else
-    echo "Already installed Docker"
-fi
-
-
-# Installation of MRtrix3
-if ! command -v mrconvert &> /dev/null; then
-    install_KUL_apps "MRtrix3"
-    if [ $do_not_install -eq 0 ]; then 
-        echo "KUL_apps: which version do you want to install"
-        echo "  1 - stable"
-        echo "  2 - development"
-        read -r -p "MRtrix3 version: [1/2] " mrtrix3_prompt     
-        git clone https://github.com/MRtrix3/mrtrix3.git
-        cd mrtrix3 
-        if [[ $mrtrix3_prompt == "2" ]]; then
-            git checkout dev
-        fi
-        oldpath=$PATH
-        if [ $local_os -eq 1 ];then
-            ./configure -conda
-        else
-            export PATH=/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin #FSL has own inlcude files 8-(
-            ./configure
-        fi
-        ./build
-        export PATH=$oldpath
-        # begin cat command - see below
-        cat <<EOT >> ${KUL_apps_config}
-# adding MRTRIX3
-export PATH=${install_location}/mrtrix3/bin:\$PATH
-
-EOT
-        # end cat command - see above
-        ${install_location}/mrtrix3/install_mime_types.sh
-    
-        echo "echo -e \"\t mrtrix3\t-\t\$(mrconvert -version | head -1 | awk '{ print \$3 }') \"" >> $KUL_apps_versions
-    else
-        echo "ok - you choose not to install MRtrix3"
-    fi
-else
-    echo "Already installed MRtrix3"
-fi
-
-
-# Installation of shard-recon
-if ! command -v dwimotioncorrect &> /dev/null; then
-    install_KUL_apps "shard-recon"
-    if [ $do_not_install -eq 0 ]; then 
-        oldpath=$PATH
-        export PATH=/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin #FSL has own inlcude files 8-(
-        git clone https://github.com/dchristiaens/shard-recon.git
-        cd shard-recon
-        ln -s ${install_location}/mrtrix3/build
-        ln -s ${install_location}/mrtrix3/bin/mrtrix3.py bin/
-        ./build
-        export PATH=$oldpath
-        # begin cat command - see below
-        cat <<EOT >> ${KUL_apps_config}
-# adding shard-recon
-export PATH=${install_location}/shard-recon/bin:\$PATH
-
-EOT
-
-    else
-        echo "ok - you choose not to install shard-recon"
-    fi
-else
-    echo "Already installed shard-recon"
-fi
 
 
 # Installation of Ants
@@ -603,71 +786,14 @@ else
 fi
 
 
-# Installation of KUL_NIS (KULeuven Neuro Imaging Suite)
-if ! [ -d "${install_location}/KUL_NIS" ]; then
-    install_KUL_apps "KUL_NIS"
-    if [ $do_not_install -eq 0 ]; then
-        git clone https://github.com/treanus/KUL_NIS.git
-        cat <<EOT >> ${KUL_apps_config}
-# adding KUL_NIS (KULeuven Neuro Imaging Suite)
-export PATH=${install_location}/KUL_NIS:\$PATH
-export PYTHONPATH=${install_location}/mrtrix3/lib:\$PYTHONPATH
-
-EOT
-        echo "echo -e \"\t KUL_NIS\t-\t\$(cd $KUL_apps_DIR/KUL_NIS; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
-    else
-        echo "ok - you choose not to install KUL_NIS"
-    fi
-else
-    echo "Already installed KUL_NIS"
-fi
-
-
-# Installation of dcm2niix
-if ! command -v dcm2niix &> /dev/null; then
-    install_KUL_apps "dcm2niix"
-    if [ $do_not_install -eq 0 ]; then
-        oldpath=$PATH
-        export PATH=/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin #FSL has own inlcude files 8-(
-        git clone https://github.com/rordenlab/dcm2niix.git
-        cd dcm2niix
-        mkdir build && cd build
-        cmake -DZLIB_IMPLEMENTATION=Cloudflare -DUSE_JPEGLS=ON -DUSE_OPENJPEG=ON ..
-        make
-        export PATH=$oldpath
-        cat <<EOT >> ${KUL_apps_config}
-# adding dcm2nixx
-export PATH=${install_location}/dcm2niix/build/bin:\$PATH
-
-EOT
-        echo "echo -e \"\t dcm2nixx\t-\t\$(dcm2niix --version | head -1 | awk '{ print \$5 }') \"" >> $KUL_apps_versions 
-    else
-        echo "ok - you choose not to install dcm2niix"
-    fi
-else
-    echo "Already installed dcm2niix"
-fi
-
-
-# download a number of Docker containers
-if [ ! -f ${install_location}/.KUL_apps_install_containers_yes ]; then
-    echo "Now installing some useful docker containers"
-    sleep 3
-    if [ $local_os -eq 1 ]; then
-        echo -e "\n\n\n"
-        echo "Here we give the installation instructions for docker containers on macOS..."
-        echo "See to it that Docker Desktop is setup and running"
-        read -p "Press any key to continue... " -n1 -s
-        echo "Not installing hd-glio-auto on macOS (no compatible GPU)"
-        echo "echo -e \"\t hd-glio-auto\t-\tcannot be installed (no compatible GPU) \"" >> $KUL_apps_versions
-    else
-        docker pull jenspetersen/hd-glio-auto
-        echo "echo -e \"\t hd-glio-auto\t-\tcannot be checked (but latest docker) \"" >> $KUL_apps_versions
-    fi
-    touch ${install_location}/.KUL_apps_install_containers_yes
-else
-    echo "Already installed required docker containers"
-fi
+# Setup of Matlab
+#if ! command -v matlab &> /dev/null
+#then
+#    echo "" >> ${bashfile}
+#    echo "# adding matlab" >> ${bashfile}
+#    echo "export PATH=/usr/local/MATLAB/R2018a/bin:\$PATH" >> ${bashfile}
+#    echo "alias matlab='xrandr --dpi 144; matlab &'" >> ${bashfile}
+#fi
 
 
 # Installation of SPM12
@@ -794,162 +920,39 @@ else
     echo "Already installed KUL_FWT"
 fi
 
-
-# Installation of Mevislab 3.7
-if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
-    install_KUL_apps "Mevislab 3.7"
+# Installation of our fork of Synb0
+if ! [ -d "${install_location}/Synb0-DISCO" ] 
+then
+    install_KUL_apps "Synb0-DISCO"
     if [ $do_not_install -eq 0 ]; then
-        if [ $local_os -eq 1 ]; then
-            
-            ml_file="https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.2/Mac/X86-64/MeVisLabSDK3.4.2_x86-64.dm"
-            wget $ml_file
-            hdiutil mount $ml_file
-            sudo cp -R /Volumes/MeVisLabSDK/MeVisLab.app /Applications
-            hdiutil unmount /Volumes/MeVisLabSDK
-            rm $ml_file
-        else
-            sudo apt-get install libxcb-xinput0 libxcb-xinerama0
-            wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.7.1/Linux/GCC11-64/MeVisLabSDK3.7.1_gcc11-64.bin
-            chmod u+x MeVisLabSDK3.7.1_gcc11-64.bin
-            mkdir MeVisLabSDK3.7.1
-            ./MeVisLabSDK3.7.1_gcc11-64.bin --prefix ${install_location}/MevislabSDK3.7.1 --mode silent
-            rm MeVisLabSDK3.7.1_gcc11-64.bin
-        fi
-        touch ${install_location}/.KUL_apps_installed_mevislab
-    else
-        echo "ok - you choose not to install Mevislab 3.7"
-    fi
-else
-    echo "Already installed MevislabSDK3.7"
-fi
-
-
-# Installation of Anaconda --- BEGIN
-if ! [ -d "${install_location}/anaconda3/" ]; then
-    install_KUL_apps "Anaconda3"
-    if [ $do_not_install -eq 0 ]; then 
-        if [ $local_os -eq 1 ]; then
-            anaconda_version=Anaconda3-2021.05-MacOSX-x86_64.pkg
-            wget https://repo.anaconda.com/archive/${anaconda_version}
-            sudo installer -pkg ${anaconda_version} -target ${install_location}
-        else
-            anaconda_version=Anaconda3-2023.03-1-Linux-x86_64.sh
-            #sudo apt-get -y install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
-            wget https://repo.anaconda.com/archive/${anaconda_version}
-            echo -e "\n\n"
-            echo "Here we give the installation instructions for anaconda..."
-            echo "ACCEPT THE LICENSE"
-            echo "INSTALL DIRECTORY = /usr/local/KUL_apps/anaconda3"
-            echo "Say NO initialize Anaconda3"
-            read -p "Press any key to continue... " -n1 -s
-            bash ${anaconda_version} -p ${install_location}/anaconda3
-            echo "" >> ${KUL_apps_config}
-            echo "# load Anaconda3"
-
-            # begin cat command - see below
-            cat <<EOT >> ${KUL_apps_config}
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="\$('/usr/local/KUL_apps/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ \$? -eq 0 ]; then
-    eval "\$__conda_setup"
-else
-    if [ -f "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/usr/local/KUL_apps/anaconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/usr/local/KUL_apps/anaconda3/bin:\$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
+        git clone https://github.com/Rad-dude/Synb0-DISCO.git
+        conda create --name radsyndisco python=3.8
+        conda activate radsyndisco
+        #sudo apt install python3-pip
+        #pip install torch
+        #pip install torchvision
+        #pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
+        conda install astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
+        #pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+        #pip install 'nibabel==2.5.2'
+        pip install nibabel scipy
+        conda deactivate
+        cat <<EOT >> ${KUL_apps_config}
+# adding SynbO-DISCO
+export PATH="${install_location}/Synb0-DISCO/data_processing:\$PATH"
 
 EOT
-            # end cat command - see above
-
-        fi
-
-        rm ${anaconda_version}
-        echo "echo -e \"\t Anaconda3\t-\t${anaconda_version}" \" >> $KUL_apps_versions
-        echo -e "\n\n\n"
-        echo "Now exit all ${os_name} terminals and run the KNT_Linux_install.sh again from a new terminal"
-        
-        exit
-
+        echo "echo -e \"\t Synbo-DISCO\t-\t\$(cd $KUL_apps_DIR/Synb0-DISCO; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
-        echo "Ananconda is really essential - don't know what to do but exit"
-        exit
+        echo "ok - you choose not to install Synb0-DISCO"
     fi
 else
-    echo "Already installed Anaconda3"
-fi
-# Installation of Anaconda --- END
-
-
-# adding some more
-pip install py3nvml glances
-
-
-# Installation of dcm2bids
-if ! command -v dcm2bids &> /dev/null; then
-    install_KUL_apps "dcm2bids"
-    if [ $do_not_install -eq 0 ]; then
-        conda install -y -c conda-forge dcm2bids
-        echo "echo -e \"\t dcm2bids\t-\t\$(dcm2bids -h | grep dcm2bids | tail -1 | awk '{ print \$2 }') \"" >> $KUL_apps_versions 
-    else
-        echo "ok - you choose not to install dcm2bids"
-    fi
-else
-    echo "Already installed dcm2bids"
-fi
-
-
-# Installation of HD-BET
-if ! command -v hd-bet &> /dev/null
-then
-    install_KUL_apps "HD-BET"
-    if [ $do_not_install -eq 0 ]; then 
-        git clone https://github.com/MIC-DKFZ/HD-BET
-        cd HD-BET
-        if [ $local_os -eq 1 ]; then
-            sudo pip install -e . # sudo needed for macOS, yes
-        else
-            pip install -e .
-        fi
-        cd
-        echo "echo -e \"\t HD-BET\t\t-\t\$(cd $KUL_apps_DIR/HD-BET; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
-        if [ $local_os -eq 1 ]; then
-            echo "" >> ${KUL_apps_config}
-            echo "# Setting up HD-BET" >> ${KUL_apps_config}
-            echo "alias hd-bet='hd-bet -device cpu -mode fast -tta 0 ' " >> ${KUL_apps_config}
-        fi
-    else
-        echo "ok - you choose not to install HD-BET"
-    fi
-else
-    echo "Already installed HD-BET"
-fi
-
-
-# Installation of HD-GLIO(-AUTO)
-if ! command -v hd_glio_predict &> /dev/null
-then
-    install_KUL_apps "HD-GLIO-AUTO"
-    if [ $do_not_install -eq 0 ]; then 
-        git clone https://github.com/NeuroAI-HD/HD-GLIO-AUTO.git
-        git clone https://github.com/NeuroAI-HD/HD-GLIO.git
-        cd HD-GLIO
-        pip install -e .
-        echo "echo -e \"\t HD-GLIO-AUTO\t-\t\$(cd $KUL_apps_DIR/HD-GLIO-AUTO; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
-    else
-        echo "ok - you choose not to install HD-BET"
-    fi
-else
-    echo "Already installed HD-BET"
+    echo "Already installed Synb0-DISCO"
 fi
 
 
 # Installation of Scilpy
-if ! [ -d "${install_location}/scilpy/" ]; then
+if ! command -v scil_filter_tractogram.py &> /dev/null; then
     install_KUL_apps "Scilpy"
     if [ $do_not_install -eq 0 ]; then
         #if [ $local_os -gt 1 ]; then
@@ -959,7 +962,6 @@ if ! [ -d "${install_location}/scilpy/" ]; then
         git clone https://github.com/scilus/scilpy.git
         cd scilpy
         conda create --name scilpy python=3.10
-        eval "$(conda shell.bash hook)"
         conda activate scilpy
         pip install -e .
         conda deactivate
@@ -977,18 +979,14 @@ if ! [ -d "${install_location}/FastSurfer/" ] && [ $local_os -gt 1 ]; then
     install_KUL_apps "FastSurfer"
     if [ $do_not_install -eq 0 ]; then
         git clone https://github.com/Deep-MI/FastSurfer.git
-        cd FastSurfer
-        conda env create -f ./fastsurfer_env_gpu.yml 
-        #eval "$(conda shell.bash hook)"
-        #conda activate fastsurfer_gpu
         cat <<EOT >> ${KUL_apps_config}
 # adding FastSurfer
 export FASTSURFER_HOME="${install_location}/FastSurfer"
 export PATH=\$FASTSURFER_HOME:\$PATH
 export PATH=\$FASTSURFER_HOME/recon_surf:\$PATH
-export PYTHONPATH="\${PYTHONPATH}:\$PWD"
 
 EOT
+        source ${install_location}/KUL_apps_config
         echo "echo -e \"\t FastSurfer\t-\t\$(cd $KUL_apps_DIR/FastSurfer; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install FastSurfer"
@@ -999,19 +997,92 @@ else
     echo "Already installed FastSurfer"
 fi
 
-
 # Installation of Karawun
 if ! [ -f "${install_location}/.KUL_apps_installed_karawun" ]; then
     install_KUL_apps "Karawun"
     if [ $do_not_install -eq 0 ]; then
+        #sudo chown -R "$(id -u):$(id -g)" $HOME/.conda
         conda config --append channels conda-forge --append channels anaconda --append channels SimpleITK
         conda create --name KarawunEnv python=3.8 karawun
+        #conda install -y  git
+        #conda create --name KarawunEnv --file https://github.com/DevelopmentalImagingMCRI/karawun/raw/master/requirements.txt
+        #conda activate KarawunEnv
+        #pip install git+https://github.com/DevelopmentalImagingMCRI/karawun.git@master
+        #conda deactivate
         touch ${install_location}/.KUL_apps_installed_karawun
     else
         echo "ok - you choose not to install Karawun"
     fi
 else
     echo "Already installed Karawun"
+fi
+
+
+# Installation of Mevislab 3.7
+if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
+    install_KUL_apps "Mevislab 3.7"
+    if [ $do_not_install -eq 0 ]; then
+        if [ $local_os -eq 1 ]; then
+            
+            ml_file="https://mevislabdownloads.mevis.de/Download/MeVisLab3.4.2/Mac/X86-64/MeVisLabSDK3.4.2_x86-64.dm"
+            wget $ml_file
+            hdiutil mount $ml_file
+            sudo cp -R /Volumes/MeVisLabSDK/MeVisLab.app /Applications
+            hdiutil unmount /Volumes/MeVisLabSDK
+            rm $ml_file
+        else
+            sudo apt-get install libxcb-xinput0 libxcb-xinerama0
+            wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.7.0/Linux/GCC11-64/MeVisLabSDK3.7.0_gcc11-64.bin
+            chmod u+x MeVisLabSDK3.7.0_gcc11-64.bin
+            mkdir MeVisLabSDK3.7
+            ./MeVisLabSDK3.7.0_gcc11-64.bin --prefix ${install_location}/MevislabSDK3.7 --mode silent
+            rm MeVisLabSDK3.7.0_gcc11-64.bin
+        fi
+        touch ${install_location}/.KUL_apps_installed_mevislab
+    else
+        echo "ok - you choose not to install Mevislab 3.7"
+    fi
+else
+    echo "Already installed MevislabSDK3.5"
+fi
+
+
+
+# Installation of Robex
+if ! [ -d "${install_location}/ROBEX/" ] && [ $local_os -gt 1 ]; then
+    install_KUL_apps "ROBEX"
+    if [ $do_not_install -eq 0 ]; then
+        wget -qO- "https://www.nitrc.org/frs/download.php/5994/ROBEXv12.linux64.tar.gz//?i_agree=1&download_now=1" | \
+            tar zx -C ${install_location}
+        cat <<EOT >> ${KUL_apps_config}
+# adding ROBEX
+export PATH="${install_location}/ROBEX:\$PATH"
+
+EOT
+    else
+        echo "ok - you choose not to install Robex"
+    fi
+elif [ $local_os -eq 1 ]; then
+    echo "Not installing Robex on macOS"
+else
+    echo "Already installed ROBEX"
+fi
+
+
+# Installation of Spinal Cord Toolbox
+program="spinalcordtoolbox"
+if ! [ -d "${install_location}/${program}" ]; then
+    install_KUL_apps ${program}
+    if [ $do_not_install -eq 0 ]; then
+        git clone https://github.com/spinalcordtoolbox/spinalcordtoolbox
+        cd spinalcordtoolbox
+        ./install_sct
+        echo "echo -e \"\t spinalcord-tb\t-\t\$(cd $KUL_apps_DIR/spinalcordtoolbox; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+    else
+        echo "ok - you choose not to install ${program}"
+    fi
+else
+    echo "Already installed ${program}"
 fi
 
 
@@ -1030,5 +1101,5 @@ if [ ! -f ${KULcheck} ]; then
 fi
 
 echo -e "\n\n\n"
-echo "All done. Please exit all terminals."
+echo "All done. Please reboot."
 echo "Install the Freesurfer license.txt into ${install_location}/freesurfer_license/"

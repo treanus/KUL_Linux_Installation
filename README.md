@@ -3,6 +3,7 @@
 This script installs a large number of NeuroImaging related software on Linux (I prefer Linux Mint 21.1, but Ubuntu 22.04 also works).
 It is not maintained anymore to install on Windows-WSL2 (latest Win11 preferably) or macOS. Results may vary...
 
+It is assumed you have an nvidia gpu.
 
 ## Which NeuroImaging software
 
@@ -13,7 +14,6 @@ The script installs the latest stable versions of:
 - mrtrix3 
 - FSL 
 - Docker
-- synb0-DISCO (own improved fork)
 - Freesurfer 
 - ANTs 
 - dcm2niix 
@@ -27,12 +27,10 @@ The script installs the latest stable versions of:
 - KUL_NeuroImaging_tools 
 - KUL_VBG
 - KUL_FWT
-- Scilpy
-- FastSurfer
 - Mevislab
-- Robex
-- Spinal Cord Toolbox
-- itk-snap
+- Scilpy (in the conda environment "scilpy")
+- FastSurfer (in the conda environment "fastsurfer_gpu")
+- Karawun (in the conda environment "KarawunEnv")
 
 ## Output of a terminal after installation
 
