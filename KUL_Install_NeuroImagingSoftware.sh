@@ -812,7 +812,7 @@ if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
             wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.7.1/Linux/GCC11-64/MeVisLabSDK3.7.1_gcc11-64.bin
             chmod u+x MeVisLabSDK3.7.1_gcc11-64.bin
             mkdir MeVisLabSDK3.7.1
-            ./MeVisLabSDK3.7.1_gcc11-64.bin --prefix ${install_location}/MevislabSDK3.7.1 --mode silent
+            ./MeVisLabSDK3.7.1_gcc11-64.bin --prefix ${install_location}/MeVislabSDK3.7.1 --mode silent
             rm MeVisLabSDK3.7.1_gcc11-64.bin
         fi
         touch ${install_location}/.KUL_apps_installed_mevislab
