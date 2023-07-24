@@ -887,6 +887,7 @@ fi
 
 # adding some more
 pip install py3nvml glances
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 
 # Installation of dcm2bids
@@ -964,6 +965,27 @@ if ! [ -d "${install_location}/scilpy/" ]; then
         pip install -e .
         conda deactivate
         echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
+    else
+        echo "ok - you choose not to install Scilpy"
+    fi
+else
+    echo "Already installed Scilpy"
+fi
+
+
+# Installation of resseg
+if ! [ -d "${install_location}/.KUL_apps_installed_resseg" ]; then
+    install_KUL_apps "resseg"
+    if [ $do_not_install -eq 0 ]; then
+        conda create -n resseg python=3.8 -y
+        eval "$(conda shell.bash hook)"
+        conda activate resseg
+        pip install light-the-torch
+        ltt install torch
+        pip install resseg
+        conda deactivate
+        touch "${install_location}/.KUL_apps_installed_resseg"
+        #echo "echo -e \"\t scilpy\t\t-\t\$(cd $KUL_apps_DIR/scilpy; git fetch 2>&1 > /dev/null; git status | head -2 | tail -1)\"" >> $KUL_apps_versions
     else
         echo "ok - you choose not to install Scilpy"
     fi
