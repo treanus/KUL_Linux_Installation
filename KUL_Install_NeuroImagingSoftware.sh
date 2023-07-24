@@ -982,6 +982,7 @@ if ! [ -d "${install_location}/.KUL_apps_installed_resseg" ]; then
         conda activate resseg
         pip install light-the-torch
         ltt install torch
+        pip install antspyx
         pip install resseg
         conda deactivate
         touch "${install_location}/.KUL_apps_installed_resseg"
