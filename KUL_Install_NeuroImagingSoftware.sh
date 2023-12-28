@@ -181,6 +181,7 @@ if [ ! -f ${install_location}/.KUL_apps_install_required_yes ]; then
         sudo apt -y install \
             git \
             htop \
+            glances \
             build-essential \
             mmv \
             numlockx \
@@ -322,7 +323,7 @@ elif [ $local_os -eq 3 ]; then
             wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
             sudo dpkg -i cuda-keyring_1.1-1_all.deb
             sudo apt-get update
-            sudo apt-get -y install cuda
+            sudo apt-get -y install cuda-toolkit-12-3
             
             cat <<EOT >> ${KUL_apps_config}
 # adding cuda_toolkit
@@ -368,7 +369,6 @@ if ! command -v fslmaths &> /dev/null; then
         echo "Here we give the installation instructions for FSL..."
         echo "it is ok to install to the default /usr/local/fsl directory"
         read -p "Press any key to continue... " -n1 -s
-        exit
         python3 fslinstaller.py -d /usr/local/fsl -s
         rm fslinstaller.py
         cat <<EOT >> ${KUL_apps_config}
@@ -389,6 +389,7 @@ fi
 
 
 # Installation of Freesurfer
+if 0; then 
 if ! command -v freeview &> /dev/null; then
     echo "KUL_apps: which version do you want to install"
     echo "  1 - v6.0.0"
@@ -442,7 +443,7 @@ EOT
 else
     echo "Already installed Freesurfer ${freesurfer_version}"
 fi
-
+fi
 
 # Installation of Docker
 if ! command -v docker &> /dev/null; then
@@ -483,17 +484,23 @@ if ! command -v mrconvert &> /dev/null; then
         read -r -p "MRtrix3 version: [1/2] " mrtrix3_prompt     
         git clone https://github.com/MRtrix3/mrtrix3.git
         cd mrtrix3 
+        oldpath=$PATH
         if [[ $mrtrix3_prompt == "2" ]]; then
             git checkout dev
-        fi
-        oldpath=$PATH
-        if [ $local_os -eq 1 ];then
-            ./configure -conda
+            apt install ninja-build ccache pre-commit
+            pre-commit install
+            cmake -GNinja -B build -DCMAKE_INSTALL_PREFIX=/usr/local/KUL_apps/mrtrix3
+            cmake --build build
+            cmake --install build
         else
-            export PATH=/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin #FSL has own inlcude files 8-(
-            ./configure
+            if [ $local_os -eq 1 ];then
+                ./configure -conda
+            else
+                export PATH=/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin #FSL has own inlcude files 8-(
+                ./configure
+            fi
+            ./build
         fi
-        ./build
         export PATH=$oldpath
         # begin cat command - see below
         cat <<EOT >> ${KUL_apps_config}
@@ -677,7 +684,7 @@ if ! [ -d "${install_location}/spm12" ]; then
         wget https://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip
         unzip spm12.zip
         #Note: Matlab needs to be installed first to compile the mex files
-        read -r -p "Do you want to recompile to SPM binaries (if so, you need yo have matlab installed and set up) [y/n] " prompt
+        read -r -p "Do you want to recompile to SPM binaries (if so, you need to have matlab installed and set up) [y/n] " prompt
         if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]
         then
             echo 'OK we continue'
@@ -809,11 +816,12 @@ if ! [ -f "${install_location}/.KUL_apps_installed_mevislab" ]; then
             rm $ml_file
         else
             sudo apt-get install libxcb-xinput0 libxcb-xinerama0
-            wget https://mevislabdownloads.mevis.de/Download/MeVisLab3.7.1/Linux/GCC11-64/MeVisLabSDK3.7.1_gcc11-64.bin
-            chmod u+x MeVisLabSDK3.7.1_gcc11-64.bin
-            mkdir MeVisLabSDK3.7.1
-            ./MeVisLabSDK3.7.1_gcc11-64.bin --prefix ${install_location}/MeVislabSDK3.7.1 --mode silent
-            rm MeVisLabSDK3.7.1_gcc11-64.bin
+            mv_vers="3.7.2"
+            wget https://mevislabdownloads.mevis.de/Download/MeVisLab${mv_vers}/Linux/GCC11-64/MeVisLabSDK${mv_vers}_gcc11-64.bin
+            chmod u+x MeVisLabSDK${mv_vers}_gcc11-64.bin
+            mkdir MeVisLabSDK${mv_vers}
+            ./MeVisLabSDK${mv_vers}_gcc11-64.bin --prefix ${install_location}/MeVisLabSDK${mv_vers} --mode silent
+            rm MeVisLabSDK${mv_vers}_gcc11-64.bin
         fi
         touch ${install_location}/.KUL_apps_installed_mevislab
     else
@@ -833,7 +841,7 @@ if ! [ -d "${install_location}/anaconda3/" ]; then
             wget https://repo.anaconda.com/archive/${anaconda_version}
             sudo installer -pkg ${anaconda_version} -target ${install_location}
         else
-            anaconda_version=Anaconda3-2023.03-1-Linux-x86_64.sh
+            anaconda_version=Anaconda3-2023.09-0-Linux-x86_64.sh
             #sudo apt-get -y install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
             wget https://repo.anaconda.com/archive/${anaconda_version}
             echo -e "\n\n"
@@ -886,8 +894,8 @@ fi
 
 
 # adding some more
-pip install py3nvml glances
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#pip install py3nvml glances
+#pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 
 # Installation of dcm2bids
@@ -1001,7 +1009,7 @@ if ! [ -d "${install_location}/FastSurfer/" ] && [ $local_os -gt 1 ]; then
     if [ $do_not_install -eq 0 ]; then
         git clone https://github.com/Deep-MI/FastSurfer.git
         cd FastSurfer
-        conda env create -f ./fastsurfer_env_gpu.yml 
+        conda env create -f ./fastsurfer.yml 
         #eval "$(conda shell.bash hook)"
         #conda activate fastsurfer_gpu
         cat <<EOT >> ${KUL_apps_config}
